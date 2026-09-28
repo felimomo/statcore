@@ -1,0 +1,7 @@
+name: statcore
+channels:
+  - conda-forge
+  - nodefaults  # avoid defaults channel to
+                # prevent backend mismatches
+dependencies:
+  - cmake
