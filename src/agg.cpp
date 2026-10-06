@@ -10,7 +10,7 @@ namespace constants {
 template <std::floating_point T>
 class Welford {
     public:
-        Welford () = default;
+        // Welford () = default; // no need for this, already in header
         T update_moments(T x) {
             last_mean = mean_;
             n_++;
