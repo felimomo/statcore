@@ -33,3 +33,16 @@ Welford<T> combine(Welford<T> a, Welford<T> b){
     a.merge(b);
     return a;
  } 
+
+ template <std::floating_point T>
+ T KahanSum (std::vector<T> v){
+    T c = 0.0;
+    T total = 0.0;
+    for (const auto& el : v ){
+        T tmp1 = el - c;
+        T tmp2 = total + tmp1; // precision lost in tmp1 due to sum >> tmp1
+        c = (tmp2 - total) - tmp1; //singles out precision lost in tmp1
+        total = tmp2;
+    }
+    return total;
+ }
