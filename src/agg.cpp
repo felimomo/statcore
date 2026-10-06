@@ -1,4 +1,6 @@
 #include <concepts>
+#include <span>
+#include <vector>
 
 namespace constants {
     inline constexpr std::size_t PAIRWISE_MIN = 64;
@@ -11,24 +13,25 @@ class Welford {
         T update_moments(T x) {
             last_mean = mean_;
             n_++;
-            mean_ = mean_ + (x - mean_) / n_; 
+            mean_ = mean_ + (x - mean_) / n_;
             M2_ = M2_ + (x - last_mean) * (x - mean_);
-            if (n_ > 1){ var_ = M2_ / (n_ - 1); }
+            if (n_ > 1) { var_ = M2_ / (n_ - 1); }
+            return mean_;
         }
         void merge(const Welford& w){
             delta = mean_ - w.mean_;
             N = n_ + w.n_;
             mean_ = mean_ + delta * w.n_ / N;
-            M2_ = M2_ + w.M2_ + (delta ** 2) * (n_ * w.n_ / N);
+            M2_ = M2_ + w.M2_ + (delta * delta) * (n_ * w.n_ / N);
             n_ = N;
             var_ = M2_ / n_;
         }
 
     private:
-        T mean_ = 0; 
-        T M2_ = 0;
-        T var_ = 0;
-        int n_ = 0;
+        T mean_ = T{0};
+        T M2_ = T{0};
+        T var_ = T{0};
+        std::size_t n_ = 0;
 };
 
 // probably will not actually need it:
@@ -49,38 +52,35 @@ Welford<T> combine(Welford<T> a, Welford<T> b){
         total = tmp2;
     };
     return total;
- }
+}
 
-//   template <std::floating_point T>
+// The following pattern seems to be generally "helper + driver".
+// helper is the span-based function that does the background computations
+// on the type best-fit to the function (spans help the recursion).
+//
+// The driver then is the interface between the actual type we want (std::vector)
+// and the type native to the helper.
+//
+// Alternative names: "wrapper + recursive helper" and "worker / wrapper"
+//
+// this wrapping seems to be needed because of templating? For 'regular' types,
+// an std::vector can be converted down to a span at compile time, however
+// the compiler does not perform conversions on template types.
 
-  template <std::ranges::input_range R,
-          std::floating_point T = std::ranges::range_value_t<R>> // default T to 'the type of elements in R'
-  T pairwiseSum (const R&& v) { 
-    // '&&': "forwarding reference" refer to "rvalues" as opposed to 
-    // persistent "lvalues" that outlive their line. (rvalues are non-named
-    // expressions.)
-    //
-    // This is important because I will be passing these types of non-named
-    // expressions in the recursion.
-    std::size_t n = v.size()
-    if (n <= constants::PAIRWISE_MIN) {
-        total = 0.0
-        for (const auto& el : v) {
-            total += else;
-        };
+// function takes a span argument, in order to 
+template <std::floating_point T>
+T pairwiseSpan(std::span<const T> s) {
+    if (s.size() <= constants::PAIRWISE_MIN) {
+        T total = 0;
+        for (T el : s) total += el;
         return total;
     }
-    else {
-        m = n / 2; // is floor because n is positive.
-        return (
-            pairwiseSum(v | std::views::take(m))
-            + 
-            pairwiseSum(
-                v 
-                | std::views::reverse // flip the view (O(1), reverses access order)
-                | std::views::take(n-m) // take the first n-m (used to be last n-m)
-                | std::views::reverse // flip the view back
-            )
-        );
-    }
-  }
+    std::size_t m = s.size() / 2;
+    return pairwiseSpan(s.first(m)) + pairwiseSpan(s.subspan(m));
+}
+
+// perform pairwise sum on vector
+template <std::floating_point T>
+T pairwiseSum(const std::vector<T>& v) {
+    return pairwiseSpan(std::span<const T>(v));
+}
