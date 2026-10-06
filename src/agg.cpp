@@ -1,6 +1,5 @@
 #include <algorithm>
 #include <concepts>
-#include <arm_neon.h>
 #include <span>
 #include <vector>
 
