@@ -1,4 +1,6 @@
+#include <algorithm>
 #include <concepts>
+#include <arm_neon.h>
 #include <span>
 #include <vector>
 
@@ -83,4 +85,22 @@ T pairwiseSpan(std::span<const T> s) {
 template <std::floating_point T>
 T pairwiseSum(const std::vector<T>& v) {
     return pairwiseSpan(std::span<const T>(v));
+}
+
+template <std::floating_point T>
+T logSumExp(const std::vector<T>& v) { // vectorize
+    T vmax = std::max_element(v);
+    std::vector<T> safe_exp_v(v.size());
+    std::transform(
+        v.begin(), 
+        v.end(), 
+        safe_exp_v.begin(), // data destination (copies transformed data at safe_v)
+        [](int x) { return std::exp(x - vmax); }
+    );
+    return std::log(pairwiseSum(safe_exp_v)) + vmax;
+}
+
+template <std::floating_point T>
+T log_1pexp(T x) {
+    return std::log(1 + std::exp(x));
 }
