@@ -15,14 +15,14 @@ endif()
 
 find_package(Armadillo REQUIRED)
 
-# Your code: header-only, since it's templates
+# header only library
 add_library(agg INTERFACE)
 target_include_directories(agg INTERFACE
   ${CMAKE_CURRENT_SOURCE_DIR}/include
   ${ARMADILLO_INCLUDE_DIRS})
 target_link_libraries(agg INTERFACE ${ARMADILLO_LIBRARIES})
 
-# Informal tests: print things and check them by eye
+# create scratch executable
 add_executable(scratch scratch/scratch.cpp)
 target_link_libraries(scratch PRIVATE agg)
 target_compile_options(scratch PRIVATE -Wall -Wextra -Wpedantic)
