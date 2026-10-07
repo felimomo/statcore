@@ -2,6 +2,7 @@
 #define AGG_H
 
 #include <vector>
+#include <span>
 
 namespace agg {
     template <std::floating_point T>

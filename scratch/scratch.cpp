@@ -1,15 +1,15 @@
 #include <armadillo>
 #include <iostream>
 #include <vector>
-#include "../agg.h"
+#include "statcore/agg.h"
 
 void test_sums() {
     arma::vec rv = arma::randn<arma::vec>(1024);
-    arma_total = arma::accu(rv);
+    double arma_total = arma::accu(rv);
 
     std::vector<double> std_rv = arma::conv_to<std::vector<double>>::from(rv);
-    kahn_total = agg::KahanSum(std_rv);
-    pair_total = agg::pairwiseSum(std_rv);
+    double kahn_total = agg::KahanSum(std_rv);
+    double pair_total = agg::pairwiseSum(std_rv);
 
     std::cout << "Armadillo total: " << arma_total 
               << "\nKahn total: " << kahn_total 
@@ -17,5 +17,5 @@ void test_sums() {
 }
 
 int main() {
-    test_sums()
+    test_sums();
 }
