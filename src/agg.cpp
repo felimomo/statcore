@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <concepts>
+#include <cmath>
 #include <span>
 #include <vector>
 
@@ -7,12 +8,14 @@ namespace constants {
     inline constexpr std::size_t PAIRWISE_MIN = 64;
 }
 
+namespace agg {
+
 template <std::floating_point T>
 class Welford {
     public:
         // Welford () = default; // no need for this, already in header
         T update_moments(T x) {
-            last_mean = mean_;
+            T last_mean = mean_;
             n_++;
             mean_ = mean_ + (x - mean_) / n_;
             M2_ = M2_ + (x - last_mean) * (x - mean_);
@@ -20,8 +23,8 @@ class Welford {
             return mean_;
         }
         void merge(const Welford& w){
-            delta = mean_ - w.mean_;
-            N = n_ + w.n_;
+            T delta = mean_ - w.mean_;
+            T N = n_ + w.n_;
             mean_ = mean_ + delta * w.n_ / N;
             M2_ = M2_ + w.M2_ + (delta * delta) * (n_ * w.n_ / N);
             n_ = N;
@@ -88,13 +91,13 @@ T pairwiseSum(const std::vector<T>& v) {
 
 template <std::floating_point T>
 T logSumExp(const std::vector<T>& v) { // vectorize
-    T vmax = std::max_element(v);
+    T vmax = std::ranges::max(v);
     std::vector<T> safe_exp_v(v.size());
-    std::transform(
+    std::transform( //vector-level transformation (not sure if it's actually vectorized)
         v.begin(), 
-        v.end(), 
+        v.end(), \
         safe_exp_v.begin(), // data destination (copies transformed data at safe_v)
-        [](int x) { return std::exp(x - vmax); }
+        [vmax](T x) { return std::exp(x - vmax); } //lambda expression, lambda needs access to vmax local var
     );
     return std::log(pairwiseSum(safe_exp_v)) + vmax;
 }
@@ -103,3 +106,19 @@ template <std::floating_point T>
 T log_1pexp(T x) {
     return std::log(1 + std::exp(x));
 }
+
+#define AGG_INSTANTIATE(T)                                      \
+    template class Welford<T>;                                  \
+    template Welford<T> combine<T>(Welford<T>, Welford<T>);     \
+    template T KahanSum<T>(std::vector<T>);                     \
+    template T pairwiseSpan<T>(std::span<const T>);             \
+    template T pairwiseSum<T>(const std::vector<T>&);           \
+    template T logSumExp<T>(const std::vector<T>&);             \
+    template T log_1pexp<T>(T);
+
+AGG_INSTANTIATE(float)
+AGG_INSTANTIATE(double)
+AGG_INSTANTIATE(long double)
+#undef AGG_INSTANTIATE
+
+} // namespace agg
