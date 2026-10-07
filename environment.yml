@@ -5,3 +5,5 @@ channels:
                 # prevent backend mismatches
 dependencies:
   - cmake
+  - armadillo
+  - compilers

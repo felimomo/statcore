@@ -15,3 +15,7 @@ void test_sums() {
               << "\nKahn total: " << kahn_total 
               << "\nPairwise total: " << pair_total;
 }
+
+int main() {
+    test_sums()
+}
