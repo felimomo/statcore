@@ -29,10 +29,14 @@ target_include_directories(agg PUBLIC
   ${ARMADILLO_INCLUDE_DIRS})
 target_link_libraries(agg PUBLIC ${ARMADILLO_LIBRARIES})
 
-# create scratch executable
+# other executables
 add_executable(scratch scratch/scratch.cpp)
 target_link_libraries(scratch PRIVATE agg)
 target_compile_options(scratch PRIVATE -Wall -Wextra -Wpedantic)
+
+add_executable(sum_bmk bench/sum_bmk.cpp)
+target_link_libraries(sum_bmk PRIVATE agg)
+target_compile_options(sum_bmk PRIVATE -Wall -Wextra -Wpedantic)
 
 # add_library(statcore STATIC src/main.cpp)
 
