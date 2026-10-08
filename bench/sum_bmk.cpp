@@ -1,6 +1,7 @@
 #include <armadillo>
 #include <chrono>
 #include <cmath>
+#include <filesystem>
 #include <iostream>
 #include <iomanip>
 #include <fstream>
@@ -12,12 +13,12 @@
 
 // time functions
 struct TimedResult { double result; double seconds; };
-struct FunBmk {
-    arma::uvec dim;
-    arma::uvec rep;
-    arma::vec value;
-    arma::vec time;
-};
+// struct FunBmk {
+//     arma::uvec dim;
+//     arma::uvec rep;
+//     arma::vec value;
+//     arma::vec time;
+// };
 
 // goal call:
 // auto [sum, seconds] = time_it([&] { return agg::KahanSum(v); }); 
@@ -55,21 +56,24 @@ TimedResult time_it (auto&& f) {
 // }
 
 void bmk_io(std::string method, int dim, const arma::vec& values, const arma::vec& runtimes) {
-    std::ofstream outFile("data/sum_benchmarks.csv", std::ios::app); // 2nd arg: flag to write at bottom of file
+    std::string file_path = "bench/data/sum_benchmarks.csv";
+    std::ofstream outFile(file_path, std::ios::app); // 2nd arg: flag to write at bottom of file
     if (!outFile) {
         std::cerr << "Error opening file!" << std::endl;
         return;
     }
     
     outFile << std::setprecision(std::numeric_limits<double>::max_digits10); // to differentiate methods
-    outFile << "method,rep,dim,value,runtime\n";
+    if( std::filesystem::is_empty(file_path) ) {
+        outFile << "method,rep,dim,value,runtime\n";
+    }
 
-    for (std::size_t i = 0; auto const& r: rep) { // c++20 syntax: (init; item: range)
+    for (std::size_t i = 0; auto const& v: values) { // c++20 syntax: (init; item: range)
         outFile << method << ","
-                << r << ","
+                << i+1 << ","
                 << dim << ","
-                << value(i) << ","
-                << runtime(i) << "\n";
+                << v << ","
+                << runtimes[i] << "\n";
         i++; // very important to not forget this itsy-bitsy little line!
     }
     // closing manually not needed because destructor is called automatically
@@ -103,15 +107,15 @@ int main(){
     
     for(std::size_t i = 0; auto const& dim: dimensions){
         // generate vectors
-        arma::mat vec_lib = arma::randu<arma::mat>(dim, n_reps(i));  
+        arma::mat vec_lib = arma::randu<arma::mat>(dim, n_reps[i]);  
 
         // Kahan
         {  
-            arma::vec values(n_reps(i));
-            arma::vec runtimes(n_reps(i));
-            for(std::size_t j=0; j<n_reps(i), j++){
+            arma::vec values(n_reps[i]);
+            arma::vec runtimes(n_reps[i]);
+            for(int j=0; j<n_reps[i]; j++){
                 std::vector<double> x = arma::conv_to<std::vector<double>>::from(vec_lib.col(j));
-                auto [res, t] = time_it([&] { return KahanSum(x); });
+                auto [res, t] = time_it([&] { return agg::KahanSum(x); });
                 values[j] = res;
                 runtimes[j] = t;
             }
@@ -120,11 +124,11 @@ int main(){
 
         // Pairwise
         {  
-            arma::vec values(n_reps(i));
-            arma::vec runtimes(n_reps(i));
-            for(std::size_t j=0; j<n_reps(i), j++){
+            arma::vec values(n_reps[i]);
+            arma::vec runtimes(n_reps[i]);
+            for(int j=0; j<n_reps[i]; j++){
                 std::vector<double> x = arma::conv_to<std::vector<double>>::from(vec_lib.col(j));
-                auto [res, t] = time_it([&] { return pairwiseSum(x); });
+                auto [res, t] = time_it([&] { return agg::pairwiseSum(x); });
                 values[j] = res;
                 runtimes[j] = t;
             }
@@ -133,11 +137,10 @@ int main(){
         
         // Armadillo
         {  
-            arma::vec values(n_reps(i));
-            arma::vec runtimes(n_reps(i));
-            for(std::size_t j=0; j<n_reps(i), j++){
-                std::vector<double> x = arma::conv_to<std::vector<double>>::from(vec_lib.col(j));
-                auto [res, t] = time_it([&] { return arma::accu(x); });
+            arma::vec values(n_reps[i]);
+            arma::vec runtimes(n_reps[i]);
+            for(int j=0; j<n_reps[i]; j++){
+                auto [res, t] = time_it([&] { return arma::accu(vec_lib.col(j)); });
                 values[j] = res;
                 runtimes[j] = t;
             }
