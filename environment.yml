@@ -4,6 +4,18 @@ channels:
   - nodefaults  # avoid defaults channel to
                 # prevent backend mismatches
 dependencies:
+  # c++
   - cmake
   - armadillo
   - compilers
+
+  # python
+  - python=3.12
+  - numpy
+  - pandas
+  - plotnine
+
+  # PyPI packages not in conda-forge
+  - pip
+  - pip:
+    - here
