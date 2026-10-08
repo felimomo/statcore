@@ -3,7 +3,7 @@
 #include <vector>
 #include "statcore/agg.h"
 
-void test_sums() {
+void basic_test_sums() {
     arma::vec rv = arma::randn<arma::vec>(1024);
     double arma_total = arma::accu(rv);
 
@@ -17,5 +17,5 @@ void test_sums() {
 }
 
 int main() {
-    test_sums();
+    basic_test_sums();
 }

@@ -46,7 +46,7 @@ Welford<T> combine(Welford<T> a, Welford<T> b){
  } 
 
  template <std::floating_point T>
- T KahanSum (std::vector<T> v) {
+ T KahanSum (const std::vector<T>& v) {
     T c = 0.0;
     T total = 0.0;
     for (const auto& el : v ){
