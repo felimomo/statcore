@@ -22,7 +22,7 @@ namespace agg {
     Welford<T> combine(Welford<T> a, Welford<T> b);
 
     template <std::floating_point T>
-    T KahanSum (std::vector<T> v);
+    T KahanSum (const std::vector<T>& v);
 
     template <std::floating_point T>
     T pairwiseSpan(std::span<const T> s);

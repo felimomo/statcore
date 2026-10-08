@@ -110,7 +110,7 @@ T log_1pexp(T x) {
 #define AGG_INSTANTIATE(T)                                      \
     template class Welford<T>;                                  \
     template Welford<T> combine<T>(Welford<T>, Welford<T>);     \
-    template T KahanSum<T>(std::vector<T>);                     \
+    template T KahanSum<T>(const std::vector<T>&);              \
     template T pairwiseSpan<T>(std::span<const T>);             \
     template T pairwiseSum<T>(const std::vector<T>&);           \
     template T logSumExp<T>(const std::vector<T>&);             \
