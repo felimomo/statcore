@@ -7,7 +7,8 @@ from plotnine import (
     ggtitle
 )
 
-data_path = "bench/data/sum_benchmarks.csv"
+# reproducibility: read frozen data
+data_path = "bench/freeze/data/sum_benchmarks.csv" 
 df = pd.read_csv(data_path)
 
 agg_df = df.groupby(["dim", "method"]).agg({
