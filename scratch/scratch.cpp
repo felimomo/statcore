@@ -22,7 +22,7 @@ void mat_test() {
     arma::mat B = arma::eye<arma::mat>(80, 80);
     std::size_t block_size = 8;
     arma::mat C = matmult::sq_mat_block_mult(A,B,block_size);
-    C.print("A x B = ");
+    C.submat(0,0,10,10).print("A x B = ");
 }
 
 int main() {
