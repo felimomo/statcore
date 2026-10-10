@@ -2,6 +2,7 @@
 #include <iostream>
 #include <vector>
 #include "statcore/agg.h"
+#include "statcore/matmult.h"
 
 void basic_test_sums() {
     arma::vec rv = arma::randn<arma::vec>(1024);
@@ -16,6 +17,15 @@ void basic_test_sums() {
               << "\nPairwise total: " << pair_total;
 }
 
+void mat_test() {
+    arma::mat A = arma::eye<arma::mat>(80, 80);
+    arma::mat B = arma::eye<arma::mat>(80, 80);
+    std::size_t block_size = 8;
+    arma::mat C = matmult::sq_mat_block_mult(A,B,block_size);
+    C.print("A x B = ");
+}
+
 int main() {
-    basic_test_sums();
+    // basic_test_sums();
+    mat_test();
 }
