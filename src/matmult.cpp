@@ -1,5 +1,8 @@
 #include <armadillo>
 #include <cmath>
+#include "statcore/matmult.h"
+
+namespace matmult{
 
 arma::mat ijk_mult(arma::mat A, arma::mat B) {
     arma::mat C(A.n_rows, B.n_cols);
@@ -35,7 +38,7 @@ arma::mat manopt_mult(arma::mat A, arma::mat B) {
    arma::mat C(A.n_rows, B.n_cols);
    for(std::size_t i = 0; i < A.n_rows; i++) {
         for(std::size_t k = 0; k < A.n_cols; k++) {
-            double Aik = A(i,k)
+            double Aik = A(i,k);
             for(std::size_t j = 0; j < B.n_cols; j++) {
                 C(i,j) += Aik * B(k,j);
             }
@@ -45,7 +48,7 @@ arma::mat manopt_mult(arma::mat A, arma::mat B) {
 }
 
 arma::mat sq_mat_block_mult(arma::mat A, arma::mat B, std::size_t block_size = 8){ //default 16: 16 doubles = 128 bytes
-    std::size_t N = A.ncol();
+    std::size_t N = A.n_cols;
     arma::mat C = arma::mat(N,N);
     #
     std::size_t n_blocks = std::round((float) N / block_size);
@@ -65,3 +68,5 @@ arma::mat sq_mat_block_mult(arma::mat A, arma::mat B, std::size_t block_size = 8
     }
     return C;
 }
+
+} // namespace matmult
