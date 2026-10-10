@@ -22,7 +22,7 @@ void mat_test() {
     arma::mat A = arma::randn<arma::mat>(d, d);
     arma::mat B = arma::randn<arma::mat>(d, d);
     std::size_t block_size = 8;
-    arma::mat C = matmult::sq_mat_block_mult(A,B,block_size);
+    arma::mat C = matmult::sq_mat_simd_block_mult(A,B,block_size);
     arma::mat diff = A * B - C;
     diff.submat(0,0,8,8).print("A x B = ");
 }
