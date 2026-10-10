@@ -22,16 +22,22 @@ find_package(Armadillo REQUIRED)
 #   ${ARMADILLO_INCLUDE_DIRS})
 # target_link_libraries(agg INTERFACE ${ARMADILLO_LIBRARIES})
 
-# compiled library
+# compiled libraries
 add_library(agg src/agg.cpp)
 target_include_directories(agg PUBLIC
   ${CMAKE_CURRENT_SOURCE_DIR}/include
   ${ARMADILLO_INCLUDE_DIRS})
 target_link_libraries(agg PUBLIC ${ARMADILLO_LIBRARIES})
 
+add_library(matmult src/matmult.cpp)
+target_include_directories(matmult PUBLIC
+  ${CMAKE_CURRENT_SOURCE_DIR}/include
+  ${ARMADILLO_INCLUDE_DIRS})
+target_link_libraries(matmult PUBLIC ${ARMADILLO_LIBRARIES})
+
 # other executables
 add_executable(scratch scratch/scratch.cpp)
-target_link_libraries(scratch PRIVATE agg)
+target_link_libraries(scratch PRIVATE agg matmult)
 target_compile_options(scratch PRIVATE -Wall -Wextra -Wpedantic)
 
 add_executable(sum_bmk bench/sum_bmk.cpp)
