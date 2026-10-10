@@ -45,22 +45,26 @@ arma::mat jki_mult(const arma::mat& A, const arma::mat& B) {
 
 arma::mat manopt_mult(const arma::mat& A, const arma::mat& B) {
     /*
-        Do the compiler optimization for ikj manually, 
+        Do the compiler optimization for jki manually, 
         to see what happens.
     */
    arma::mat C(A.n_rows, B.n_cols);
-   for(std::size_t i = 0; i < A.n_rows; i++) {
+   for(std::size_t j = 0; j < B.n_cols; j++) {
         for(std::size_t k = 0; k < A.n_cols; k++) {
-            double Aik = A(i,k);
-            for(std::size_t j = 0; j < B.n_cols; j++) {
-                C(i,j) += Aik * B(k,j);
+            double Bkj = B.at(k,j);
+                for(std::size_t i = 0; i < A.n_rows; i++) {
+                C(i,j) += A.at(i,k) * Bkj; // we loop over column k of i -> cache-friendly
             }
         }
     }
     return C;
 }
 
-arma::mat sq_mat_block_mult(const arma::mat& A, const arma::mat& B, std::size_t block_size = 8){ //default 16: 16 doubles = 128 bytes
+arma::mat sq_mat_block_mult(
+    const arma::mat& A, 
+    const arma::mat& B, 
+    std::size_t block_size = 128 // (double: 8 bytes) * 128 * 128 = 128 KB (Apple M2) 
+) { 
     std::size_t N = A.n_cols;
     arma::mat C = arma::mat(N,N, arma::fill::zeros);
     //
