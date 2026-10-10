@@ -30,8 +30,19 @@ int main() {
         for(int rep = 0; rep < n_rep[i]; rep++) {
             A = mat_A_lib.slice(rep);
             B = mat_B_lib.slice(rep);            
-            C 
-
+            [ijk_C, ijk_t] = time_mm([A,B]{ return matmult::ijk_mult(A,B); });
+            [ikj_C, ikj_t] = time_mm([A,B]{ return matmult::ikj_mult(A,B); });
+            [jki_C, jki_t] = time_mm([A,B]{ return matmult::jki_mult(A,B); });
+            [manopt_C, manopt_t] = time_mm([A,B]{ return matmult::manopt_mult(A,B); });
+            [b128_C, b128_t] = time_mm([A,B]{ return matmult::sq_mat_block_mult(A,B,128); });
+            [b64_C, b64_t] = time_mm([A,B]{ return matmult::sq_mat_block_mult(A,B,64); });
+            [b32_C, b32_t] = time_mm([A,B]{ return matmult::sq_mat_block_mult(A,B,32); });
+            [b256_C, b256_t] = time_mm([A,B]{ return matmult::sq_mat_block_mult(A,B,256); });
+            [simd128_C, simd128_t] = time_mm([A,B]{ return matmult::sq_mat_simd_block_mult(A,B,128); });
+            [simd64_C, simd64_t] = time_mm([A,B]{ return matmult::sq_mat_simd_block_mult(A,B,64); });
+            [simd32_C, simd32_t] = time_mm([A,B]{ return matmult::sq_mat_simd_block_mult(A,B,32); });
+            //
+            arma::mat arma_C = A * B;
         }
 
 
