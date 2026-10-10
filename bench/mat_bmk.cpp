@@ -43,6 +43,8 @@ int main() {
             [simd32_C, simd32_t] = time_mm([A,B]{ return matmult::sq_mat_simd_block_mult(A,B,32); });
             //
             arma::mat arma_C = A * B;
+            //
+            ijk_err = arma::norm(arma_C - ijk_C, 2);
         }
 
 
