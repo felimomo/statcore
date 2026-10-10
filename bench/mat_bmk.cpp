@@ -37,14 +37,22 @@ int main() {
             [b128_C, b128_t] = time_mm([A,B]{ return matmult::sq_mat_block_mult(A,B,128); });
             [b64_C, b64_t] = time_mm([A,B]{ return matmult::sq_mat_block_mult(A,B,64); });
             [b32_C, b32_t] = time_mm([A,B]{ return matmult::sq_mat_block_mult(A,B,32); });
-            [b256_C, b256_t] = time_mm([A,B]{ return matmult::sq_mat_block_mult(A,B,256); });
             [simd128_C, simd128_t] = time_mm([A,B]{ return matmult::sq_mat_simd_block_mult(A,B,128); });
             [simd64_C, simd64_t] = time_mm([A,B]{ return matmult::sq_mat_simd_block_mult(A,B,64); });
             [simd32_C, simd32_t] = time_mm([A,B]{ return matmult::sq_mat_simd_block_mult(A,B,32); });
             //
             arma::mat arma_C = A * B;
             //
-            ijk_err = arma::norm(arma_C - ijk_C, 2);
+            const double ijk_err =    arma::norm(arma_C - ijk_C, 2);
+            const double ikj_err =    arma::norm(arma_C - ikj_C, 2);
+            const double jki_err =    arma::norm(arma_C - jki_C, 2);
+            const double manopt_err = arma::norm(arma_C - manopt_C, 2);
+            const double b128_err =   arma::norm(arma_C - b128_C, 2);
+            const double b64_err =    arma::norm(arma_C - b64_C, 2);
+            const double b32_err =    arma::norm(arma_C - b32_C, 2);
+            const double simd128_err =arma::norm(arma_C - simd128_C, 2);
+            const double simd64_err = arma::norm(arma_C - simd64_C, 2);
+            const double simd32_err = arma::norm(arma_C - simd32_C, 2);
         }
 
 
