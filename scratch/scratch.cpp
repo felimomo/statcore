@@ -18,8 +18,9 @@ void basic_test_sums() {
 }
 
 void mat_test() {
-    arma::mat A = arma::randn<arma::mat>(80, 80);
-    arma::mat B = arma::randn<arma::mat>(80, 80);
+    std::size_t d = 1024;
+    arma::mat A = arma::randn<arma::mat>(d, d);
+    arma::mat B = arma::randn<arma::mat>(d, d);
     std::size_t block_size = 8;
     arma::mat C = matmult::sq_mat_block_mult(A,B,block_size);
     arma::mat diff = A * B - C;
