@@ -51,7 +51,7 @@ arma::mat manopt_mult(const arma::mat& A, const arma::mat& B) {
    arma::mat C(A.n_rows, B.n_cols);
    for(std::size_t j = 0; j < B.n_cols; j++) {
         for(std::size_t k = 0; k < A.n_cols; k++) {
-            double Bkj = B.at(k,j);
+            const double Bkj = B.at(k,j);
                 for(std::size_t i = 0; i < A.n_rows; i++) {
                 C(i,j) += A.at(i,k) * Bkj; // we loop over column k of i -> cache-friendly
             }
@@ -73,7 +73,7 @@ arma::mat sq_mat_block_mult(
         for (std::size_t K = 0; K < n_blocks; K++){
             std::size_t block_I_end = std::min((I + 1) * block_size, N) - 1; // submat is inclusive on both ends
             std::size_t block_K_end = std::min((K + 1) * block_size, N) - 1;
-            arma::mat A_block = A.submat(I * block_size, K * block_size, block_I_end, block_K_end);
+            const arma::mat A_block = A.submat(I * block_size, K * block_size, block_I_end, block_K_end);
             //
             for (std::size_t J = 0; J < n_blocks; J++) {
                 std::size_t block_J_end = std::min((J + 1) * block_size, N) - 1;
@@ -97,18 +97,17 @@ arma::mat sq_mat_simd_block_mult(
     std::size_t n_blocks = std::round((float) N / block_size);
     for (std::size_t I = 0; I < n_blocks; I++) {
         for (std::size_t K = 0; K < n_blocks; K++){
-            #pragma omp simd
-            {
-                std::size_t block_I_end = std::min((I + 1) * block_size, N) - 1; // submat is inclusive on both ends
-                std::size_t block_K_end = std::min((K + 1) * block_size, N) - 1;
-                arma::mat A_block = A.submat(I * block_size, K * block_size, block_I_end, block_K_end);
+            //
+            std::size_t block_I_end = std::min((I + 1) * block_size, N) - 1; // submat is inclusive on both ends
+            std::size_t block_K_end = std::min((K + 1) * block_size, N) - 1;
+            const arma::mat A_block = A.submat(I * block_size, K * block_size, block_I_end, block_K_end);
+            //
+            for (std::size_t J = 0; J < n_blocks; J++) {
+                #pragma omp simd
+                std::size_t block_J_end = std::min((J + 1) * block_size, N) - 1;
+                arma::mat B_block = B.submat(K * block_size, J * block_size, block_K_end, block_J_end);
                 //
-                for (std::size_t J = 0; J < n_blocks; J++) {
-                    std::size_t block_J_end = std::min((J + 1) * block_size, N) - 1;
-                    arma::mat B_block = B.submat(K * block_size, J * block_size, block_K_end, block_J_end);
-                    //
-                    C.submat(I * block_size, J * block_size, block_I_end, block_J_end) += jki_mult(A_block, B_block);
-                }
+                C.submat(I * block_size, J * block_size, block_I_end, block_J_end) += jki_mult(A_block, B_block);
             }
         }
     }
