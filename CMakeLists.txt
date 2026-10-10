@@ -41,8 +41,12 @@ target_link_libraries(scratch PRIVATE agg matmult)
 target_compile_options(scratch PRIVATE -Wall -Wextra -Wpedantic)
 
 add_executable(sum_bmk bench/sum_bmk.cpp)
-target_link_libraries(sum_bmk PRIVATE agg matmult)
+target_link_libraries(sum_bmk PRIVATE agg)
 target_compile_options(sum_bmk PRIVATE -Wall -Wextra -Wpedantic)
+
+add_executable(mat_bmk bench/mat_bmk.cpp)
+target_link_libraries(mat_bmk PRIVATE matmult)
+target_compile_options(mat_bmk PRIVATE -Wall -Wextra -Wpedantic)
 
 # add_library(statcore STATIC src/main.cpp)
 
