@@ -18,11 +18,12 @@ void basic_test_sums() {
 }
 
 void mat_test() {
-    arma::mat A = arma::eye<arma::mat>(80, 80);
-    arma::mat B = arma::eye<arma::mat>(80, 80);
+    arma::mat A = arma::randn<arma::mat>(80, 80);
+    arma::mat B = arma::randn<arma::mat>(80, 80);
     std::size_t block_size = 8;
     arma::mat C = matmult::sq_mat_block_mult(A,B,block_size);
-    C.submat(0,0,10,10).print("A x B = ");
+    arma::mat diff = A * B - C;
+    diff.submat(0,0,8,8).print("A x B = ");
 }
 
 int main() {
