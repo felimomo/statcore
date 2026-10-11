@@ -46,7 +46,7 @@ target_compile_options(sum_bmk PRIVATE -Wall -Wextra -Wpedantic)
 
 add_executable(mat_bmk bench/mat_bmk.cpp)
 target_link_libraries(mat_bmk PRIVATE matmult)
-target_compile_options(mat_bmk PRIVATE -Wall -Wextra -Wpedantic)
+target_compile_options(mat_bmk PRIVATE -Wall -Wextra -Wpedantic -O3)
 
 # add_library(statcore STATIC src/main.cpp)
 
