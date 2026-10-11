@@ -30,13 +30,50 @@ arma::mat ikj_mult(const arma::mat& A, const arma::mat& B) {
     return C;
 }
 
-arma::mat jki_mult(const arma::mat& A, const arma::mat& B) {
+inline arma::mat jki_mult(const arma::mat& A, const arma::mat& B) {
     // like ikj but geared towards column-major layouts (armadillo)
     arma::mat C(A.n_rows, B.n_cols);
     for(std::size_t j = 0; j < B.n_cols; j++) {
         for(std::size_t k = 0; k < A.n_cols; k++) {
             for(std::size_t i = 0; i < A.n_rows; i++) {
                 C.at(i,j) += A.at(i,k) * B.at(k,j);
+            }
+        }
+    }
+    return C;
+}
+
+// arma::mat simd_jki_mult(const arma::mat& A, const arma::mat& B) {
+//     // Like jki but using simd operations
+//     arma::mat C(A.n_rows, B.n_cols);
+//     for(std::size_t j = 0; j < B.n_cols; j++) {
+//         for(std::size_t k = 0; k < A.n_cols; k++) {
+//             const double Bkj = B.at(k,j);
+//             #pragma omp simd
+//             {
+//                 for(std::size_t i = 0; i < A.n_rows; i++) {
+//                     C.at(i,j) += A.at(i,k) * Bkj;
+//                 }
+//             }
+//         }
+//     }
+//     return C;
+// }
+
+inline arma::mat simd_jki_mult(const arma::mat& A, const arma::mat& B) {
+    // Like jki but using simd operations
+    arma::mat C(A.n_rows, B.n_cols);
+    for(std::size_t j = 0; j < B.n_cols; j++) {
+        for(std::size_t k = 0; k < A.n_cols; k++) {
+            const double Bkj = B.at(k,j);
+            const double* A_k_col = A.colptr(k);
+            double* C_j_col = C.colptr(j);
+            #pragma omp simd
+            {
+                for(std::size_t i = 0; i < A.n_rows; i++) {
+                    // C.at(i,j) += A.at(i,k) * Bkj;
+                    C_j_col[i] += A_k_col[i] * Bkj;
+                }
             }
         }
     }
@@ -53,7 +90,7 @@ arma::mat manopt_mult(const arma::mat& A, const arma::mat& B) {
         for(std::size_t k = 0; k < A.n_cols; k++) {
             const double Bkj = B.at(k,j);
                 for(std::size_t i = 0; i < A.n_rows; i++) {
-                C(i,j) += A.at(i,k) * Bkj; // we loop over column k of i -> cache-friendly
+                C.at(i,j) += A.at(i,k) * Bkj; // we loop over column k of i -> cache-friendly
             }
         }
     }
@@ -102,12 +139,14 @@ arma::mat sq_mat_simd_block_mult(
             std::size_t block_K_end = std::min((K + 1) * block_size, N) - 1;
             const arma::mat A_block = A.submat(I * block_size, K * block_size, block_I_end, block_K_end);
             //
-            for (std::size_t J = 0; J < n_blocks; J++) {
-                #pragma omp simd
-                std::size_t block_J_end = std::min((J + 1) * block_size, N) - 1;
-                arma::mat B_block = B.submat(K * block_size, J * block_size, block_K_end, block_J_end);
-                //
-                C.submat(I * block_size, J * block_size, block_I_end, block_J_end) += jki_mult(A_block, B_block);
+            // #pragma omp simd
+            {
+                for (std::size_t J = 0; J < n_blocks; J++) {
+                    std::size_t block_J_end = std::min((J + 1) * block_size, N) - 1;
+                    arma::mat B_block = B.submat(K * block_size, J * block_size, block_K_end, block_J_end);
+                    //
+                    C.submat(I * block_size, J * block_size, block_I_end, block_J_end) += simd_jki_mult(A_block, B_block);
+                }
             }
         }
     }
