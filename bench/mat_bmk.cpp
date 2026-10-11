@@ -31,8 +31,8 @@ TimedMatMult time_mm (auto&& f) {
 int main() {
     //
     // benchmark properties
-    std::vector<int> dimensions = { 256, 512, 1024, 2048 };
-    std::vector<int> n_rep = { 50, 30, 20, 10 };
+    std::vector<int> dimensions = { 256, 512, 1024, 2048, 3072 };
+    std::vector<int> n_rep = { 30, 20, 10, 5, 5 };
     //
     // io 
     std::string file_path = "bench/data/matmult_benchmarks.csv";
@@ -55,10 +55,10 @@ int main() {
         for(int rep = 0; rep < n_rep[i]; rep++) {
             arma::mat A = mat_A_lib.slice(rep);
             arma::mat B = mat_B_lib.slice(rep);            
-            auto [ijk_C, ijk_t] = time_mm([A,B]{ return matmult::ijk_mult(A,B); });
-            auto [ikj_C, ikj_t] = time_mm([A,B]{ return matmult::ikj_mult(A,B); });
-            auto [jki_C, jki_t] = time_mm([A,B]{ return matmult::jki_mult(A,B); });
-            auto [manopt_C, manopt_t] = time_mm([A,B]{ return matmult::manopt_mult(A,B); });
+        //     auto [ijk_C, ijk_t] = time_mm([A,B]{ return matmult::ijk_mult(A,B); });
+        //     auto [ikj_C, ikj_t] = time_mm([A,B]{ return matmult::ikj_mult(A,B); });
+        //     auto [jki_C, jki_t] = time_mm([A,B]{ return matmult::jki_mult(A,B); });
+        //     auto [manopt_C, manopt_t] = time_mm([A,B]{ return matmult::manopt_mult(A,B); });
             auto [b128_C, b128_t] = time_mm([A,B]{ return matmult::sq_mat_block_mult(A,B,128); });
             auto [b64_C, b64_t] = time_mm([A,B]{ return matmult::sq_mat_block_mult(A,B,64); });
             auto [b32_C, b32_t] = time_mm([A,B]{ return matmult::sq_mat_block_mult(A,B,32); });
@@ -68,10 +68,10 @@ int main() {
             //
             arma::mat arma_C = A * B;
             //
-            const double ijk_err =    arma::norm(arma_C - ijk_C, 2);
-            const double ikj_err =    arma::norm(arma_C - ikj_C, 2);
-            const double jki_err =    arma::norm(arma_C - jki_C, 2);
-            const double manopt_err = arma::norm(arma_C - manopt_C, 2);
+        //     const double ijk_err =    arma::norm(arma_C - ijk_C, 2);
+        //     const double ikj_err =    arma::norm(arma_C - ikj_C, 2);
+        //     const double jki_err =    arma::norm(arma_C - jki_C, 2);
+        //     const double manopt_err = arma::norm(arma_C - manopt_C, 2);
             const double b128_err =   arma::norm(arma_C - b128_C, 2);
             const double b64_err =    arma::norm(arma_C - b64_C, 2);
             const double b32_err =    arma::norm(arma_C - b32_C, 2);
@@ -84,14 +84,14 @@ int main() {
                 std::ofstream outFile(file_path, std::ios::app); // 2nd arg: flag to write at bottom of file
                 outFile << std::setprecision(std::numeric_limits<double>::max_digits10);
                 // each method: one line
-                outFile << dim << "," << rep<< "," << "ijk"<< ","
-                        << ijk_err<< "," << ijk_t << "\n";
-                outFile << dim<< "," << rep<< "," << "ikj"<< ","
-                        << ikj_err<< "," << ikj_t << "\n";
-                outFile << dim<< "," << rep<< "," << "jki"<< ","
-                        << jki_err<< "," << jki_t << "\n";
-                outFile << dim<< "," << rep<< "," << "ManOpt"<< ","
-                        << manopt_err<< "," << manopt_t << "\n";
+                // outFile << dim << "," << rep<< "," << "ijk"<< ","
+                //         << ijk_err<< "," << ijk_t << "\n";
+                // outFile << dim<< "," << rep<< "," << "ikj"<< ","
+                //         << ikj_err<< "," << ikj_t << "\n";
+                // outFile << dim<< "," << rep<< "," << "jki"<< ","
+                //         << jki_err<< "," << jki_t << "\n";
+                // outFile << dim<< "," << rep<< "," << "ManOpt"<< ","
+                //         << manopt_err<< "," << manopt_t << "\n";
                 outFile << dim<< "," << rep<< "," << "block128"<< ","
                         << b128_err<< "," << b128_t << "\n";
                 outFile << dim<< "," << rep<< "," << "block64"<< ","
