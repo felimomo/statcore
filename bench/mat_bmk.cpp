@@ -31,8 +31,8 @@ TimedMatMult time_mm (auto&& f) {
 int main() {
     //
     // benchmark properties
-    std::vector<int> dimensions = { 256, 512, 1024, 2048, 3072 };
-    std::vector<int> n_rep = { 30, 20, 10, 5, 5 };
+    std::vector<int> dimensions = { 256, 400, 512, 800, 1024, 1500, 2048, 2500 };
+    std::vector<int> n_rep =      { 30,  30,  30,  20,  10,   10,   5,    5 };
     //
     // io 
     std::string file_path = "bench/data/matmult_benchmarks.csv";
@@ -42,7 +42,7 @@ int main() {
             std::cerr << "Error opening file!" << std::endl;
             return 0;
         }
-        outFile << "dim,rep,method,error,runtime\n";
+        outFile << "dim,rep,method,runtime\n";
     }
     //
     // bmk loop
@@ -55,55 +55,69 @@ int main() {
         for(int rep = 0; rep < n_rep[i]; rep++) {
             arma::mat A = mat_A_lib.slice(rep);
             arma::mat B = mat_B_lib.slice(rep);            
-        //     auto [ijk_C, ijk_t] = time_mm([A,B]{ return matmult::ijk_mult(A,B); });
-        //     auto [ikj_C, ikj_t] = time_mm([A,B]{ return matmult::ikj_mult(A,B); });
-        //     auto [jki_C, jki_t] = time_mm([A,B]{ return matmult::jki_mult(A,B); });
-        //     auto [manopt_C, manopt_t] = time_mm([A,B]{ return matmult::manopt_mult(A,B); });
-            auto [b128_C, b128_t] = time_mm([A,B]{ return matmult::sq_mat_block_mult(A,B,128); });
-            auto [b64_C, b64_t] = time_mm([A,B]{ return matmult::sq_mat_block_mult(A,B,64); });
-            auto [b32_C, b32_t] = time_mm([A,B]{ return matmult::sq_mat_block_mult(A,B,32); });
-            auto [simd128_C, simd128_t] = time_mm([A,B]{ return matmult::sq_mat_simd_block_mult(A,B,128); });
-            auto [simd64_C, simd64_t] = time_mm([A,B]{ return matmult::sq_mat_simd_block_mult(A,B,64); });
-            auto [simd32_C, simd32_t] = time_mm([A,B]{ return matmult::sq_mat_simd_block_mult(A,B,32); });
-            //
-            arma::mat arma_C = A * B;
-            //
-        //     const double ijk_err =    arma::norm(arma_C - ijk_C, 2);
-        //     const double ikj_err =    arma::norm(arma_C - ikj_C, 2);
-        //     const double jki_err =    arma::norm(arma_C - jki_C, 2);
-        //     const double manopt_err = arma::norm(arma_C - manopt_C, 2);
-            const double b128_err =   arma::norm(arma_C - b128_C, 2);
-            const double b64_err =    arma::norm(arma_C - b64_C, 2);
-            const double b32_err =    arma::norm(arma_C - b32_C, 2);
-            const double simd128_err =arma::norm(arma_C - simd128_C, 2);
-            const double simd64_err = arma::norm(arma_C - simd64_C, 2);
-            const double simd32_err = arma::norm(arma_C - simd32_C, 2);
+
+            auto [bloc64_64_C, bloc64_64_t] = time_mm([A,B] {return matmult::tiled_sq_mult(A,B,64,64,false); });
+            auto [simd64_64_C, simd64_64_t] = time_mm([A,B] {return matmult::tiled_sq_mult(A,B,64,64,true); });
+
+            auto [bloc64_32_C, bloc64_32_t] = time_mm([A,B] {return matmult::tiled_sq_mult(A,B,64,32,false); });
+            auto [simd64_32_C, simd64_32_t] = time_mm([A,B] {return matmult::tiled_sq_mult(A,B,64,32,true); });
+
+            auto [bloc32_64_C, bloc32_64_t] = time_mm([A,B] {return matmult::tiled_sq_mult(A,B,32,64,false); });
+            auto [simd32_64_C, simd32_64_t] = time_mm([A,B] {return matmult::tiled_sq_mult(A,B,32,64,true); });
+
+            auto [bloc32_32_C, bloc32_32_t] = time_mm([A,B] {return matmult::tiled_sq_mult(A,B,32,32,false); });
+            auto [simd32_32_C, simd32_32_t] = time_mm([A,B] {return matmult::tiled_sq_mult(A,B,32,32,true); });
+
+            auto [claude_C, claude_t] = time_mm([A,B] {
+                        return matmult::tiled_sq_mult_claude<matmult::reg_blocked_mult>(A, B); 
+                });
+
+            auto [ref_C, ref_t] = time_mm([&A, &B]() -> arma::mat { return A * B; });
+            // avoid Arma lazy eval which was the default with:
+            // time_mm([A,B] {return A * B; });
+            auto [naive_C, naive_t] = time_mm([A,B] {return matmult::ijk_mult(A, B); });
+
             //
             // io scope:
             {
                 std::ofstream outFile(file_path, std::ios::app); // 2nd arg: flag to write at bottom of file
                 outFile << std::setprecision(std::numeric_limits<double>::max_digits10);
                 // each method: one line
-                // outFile << dim << "," << rep<< "," << "ijk"<< ","
-                //         << ijk_err<< "," << ijk_t << "\n";
-                // outFile << dim<< "," << rep<< "," << "ikj"<< ","
-                //         << ikj_err<< "," << ikj_t << "\n";
-                // outFile << dim<< "," << rep<< "," << "jki"<< ","
-                //         << jki_err<< "," << jki_t << "\n";
-                // outFile << dim<< "," << rep<< "," << "ManOpt"<< ","
-                //         << manopt_err<< "," << manopt_t << "\n";
-                outFile << dim<< "," << rep<< "," << "block128"<< ","
-                        << b128_err<< "," << b128_t << "\n";
-                outFile << dim<< "," << rep<< "," << "block64"<< ","
-                        << b64_err<< "," << b64_t << "\n";
-                outFile << dim<< "," << rep<< "," << "block32"<< ","
-                        << b32_err<< "," << b32_t << "\n";
-                outFile << dim<< "," << rep<< "," << "simd128"<< ","
-                        << simd128_err<< "," << simd128_t << "\n"; 
-                outFile << dim<< "," << rep<< "," << "simd64"<< ","
-                        << simd64_err<< "," << simd64_t << "\n";
-                outFile << dim<< "," << rep<< "," << "simd32"<< ","
-                        << simd32_err<< "," << simd32_t << "\n";
+
+                // 64 target C block, 64 contracted dim
+                outFile << dim<< "," << rep<< "," << "bloc64_64"<< ","
+                        << bloc64_64_t << "\n";
+                outFile << dim<< "," << rep<< "," << "simd64_64"<< ","
+                        << simd64_64_t << "\n";
+                
+                // 64 target C block, 32 contracted dim
+                outFile << dim<< "," << rep<< "," << "bloc64_32"<< ","
+                        << bloc64_32_t << "\n";
+                outFile << dim<< "," << rep<< "," << "simd64_32"<< ","
+                        << simd64_32_t << "\n";
+
+                // 32 target C block, 64 contracted dim
+                outFile << dim<< "," << rep<< "," << "bloc32_64"<< ","
+                        << bloc32_64_t << "\n";
+                outFile << dim<< "," << rep<< "," << "simd32_64"<< ","
+                        << simd32_64_t << "\n";
+
+                // 32 target C block, 32 contracted dim
+                outFile << dim<< "," << rep<< "," << "bloc32_32"<< ","
+                        << bloc32_32_t << "\n";
+                outFile << dim<< "," << rep<< "," << "simd32_32"<< ","
+                        << simd32_32_t << "\n";
+
+                // armadillo native and naive
+                outFile << dim<< "," << rep<< "," << "armadillo"<< ","
+                        << ref_t << "\n";
+                outFile << dim<< "," << rep<< "," << "naive"<< ","
+                        << naive_t << "\n";
+
+                // claude claude_t
+                outFile << dim<< "," << rep<< "," << "claude_4x4"<< ","
+                        << claude_t << "\n";
+
             }
         }
 
