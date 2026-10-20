@@ -4,10 +4,12 @@ channels:
   - nodefaults  # avoid defaults channel to
                 # prevent backend mismatches
 dependencies:
-  # c++
-  - cmake
-  - armadillo
+  # c++ build
   - compilers
+  - cmake
+  # c++ tools
+  - armadillo
+  - eigen
 
   # python
   - python=3.12
