@@ -14,6 +14,7 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
 endif()
 
 find_package(Armadillo REQUIRED)
+find_package(Eigen3 REQUIRED NO_MODULE)
 
 # # header only library
 # add_library(agg INTERFACE)
@@ -29,15 +30,18 @@ target_include_directories(agg PUBLIC
   ${ARMADILLO_INCLUDE_DIRS})
 target_link_libraries(agg PUBLIC ${ARMADILLO_LIBRARIES})
 
+# -O3 -fopenmp-simd -mcpu=apple-m2
 add_library(matmult src/matmult.cpp)
 target_include_directories(matmult PUBLIC
   ${CMAKE_CURRENT_SOURCE_DIR}/include
   ${ARMADILLO_INCLUDE_DIRS})
 target_link_libraries(matmult PUBLIC ${ARMADILLO_LIBRARIES})
+target_compile_options(matmult PRIVATE -O3 -fopenmp-simd -mcpu=apple-m2)
 
 # other executables
 add_executable(scratch scratch/scratch.cpp)
 target_link_libraries(scratch PRIVATE agg matmult)
+target_link_libraries(scratch PRIVATE Eigen3::Eigen)
 target_compile_options(scratch PRIVATE -Wall -Wextra -Wpedantic)
 
 add_executable(sum_bmk bench/sum_bmk.cpp)
@@ -46,7 +50,7 @@ target_compile_options(sum_bmk PRIVATE -Wall -Wextra -Wpedantic)
 
 add_executable(mat_bmk bench/mat_bmk.cpp)
 target_link_libraries(mat_bmk PRIVATE matmult)
-target_compile_options(mat_bmk PRIVATE -Wall -Wextra -Wpedantic -O3)
+target_compile_options(mat_bmk PRIVATE -Wall -Wextra -Wpedantic)
 
 # add_library(statcore STATIC src/main.cpp)
 
