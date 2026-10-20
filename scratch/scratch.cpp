@@ -1,6 +1,11 @@
-#include <armadillo>
+// #define EIGEN_DEBUG_ASSIGN // print out assignment decisions
+
 #include <iostream>
 #include <vector>
+
+#include <armadillo>
+#include <Eigen/Dense>
+
 #include "statcore/agg.h"
 #include "statcore/matmult.h"
 
@@ -27,7 +32,17 @@ void mat_test() {
     diff.submat(0,0,8,8).print("A x B = ");
 }
 
+void eigen_test() {
+    using Eigen::MatrixXd;
+    MatrixXd A = MatrixXd::Random(5,2);
+    MatrixXd B = MatrixXd::Random(2,5);
+    MatrixXd C = MatrixXd::Random(5,5);
+    auto expr = A * B + C;
+    std::cout << "A * B + C = \n" << A * B + C << "\n";
+}
+
 int main() {
     // basic_test_sums();
-    mat_test();
+    // mat_test();
+    eigen_test();
 }
