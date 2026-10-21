@@ -279,9 +279,9 @@ namespace Models{
                 beta_ = b;
             }
             
-            double log_likelihood(arma::rowvec x_obs, double y_obs) {
+            double log_likelihood(arma::rowvec x_obs, std::size_t y_obs) {
                 double lambda = exp(x_obs * beta_ + beta0_);
-
+                return y_obs * log(lambda) - lambda - std::lgamma(y_obs+1);
             }
             
         private:
