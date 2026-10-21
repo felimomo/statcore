@@ -9,6 +9,19 @@
 
 #include "statcore/agg.h"
 
+// Lapack ABI
+extern "C" {
+  void dgesv_(
+    const int* n, 
+    const int* nrhs, 
+    double* a, 
+    const int* lda,
+    int* ipiv, 
+    double* b, 
+    const int* ldb, 
+    int* info);
+}
+
 namespace Models{
 
     using std::exp;
