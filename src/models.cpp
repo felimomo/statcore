@@ -47,11 +47,25 @@ namespace Models{
 
     class ModelBase {
         public:
-            explicit ModelBase(std::mt19937_64& rng) rng_(rng) {}
+            explicit ModelBase(std::mt19937_64& rng, std::size_t dim) rng_(rng), dim_(dim) {}
             virtual ~ModelBase() = default; // destroy resources called from derived class
             virtual double likelihood(VectorXd x) = 0.;
+
+            void ingest_data(arma::mat X, arma::vec y) {
+                if (y.n_rows != X.n_rows) {
+                    throw std::invalid_argument("ModelBase::ingest_data: Numer of rows in X and y do not match.");
+                }
+                if (X.n_cols != dim_) {
+                    throw std::invalid_argument("ModelBase::ingest_data: Numer of cols in X does not match dim.");
+                }
+                X_ = X;
+                y_ = y;
+            }
         protected: // to be able to access from child classes
             std::mt19937_64& rng_;
+            std::size_t dim_;
+            arma::mat X_;
+            arma::vec y_;
     }
 
     class Guassian : ModelBase {
@@ -60,21 +74,10 @@ namespace Models{
                 std::size_t dim,
                 double sigma,
                 std::mt19937_64& rng
-            ): ModelBase(rng), dim_(dim), sigma_(sigma) {
+            ): ModelBase(rng, dim), sigma_(sigma) {
                 // initialize random normal:
                 beta_ = arma::randn(dim_);
                 beta0_ = arma::randn<double>();
-            }
-
-            void ingest_data(arma::mat X, arma::vec y) {
-                if (y.n_rows != X.n_rows) {
-                    throw std::invalid_argument("Gaussian::ingest_data: Numer of rows in X and y do not match.");
-                }
-                if (X.n_cols != dim_) {
-                    throw std::invalid_argument("Gaussian::ingest_data: Numer of cols in X does not match dim.");
-                }
-                X_ = X;
-                y_ = y;
             }
 
             void update_pars_wts() {
@@ -101,29 +104,31 @@ namespace Models{
                 if (info > 0) {
                     cout << "dgesv_ info = " << info;
                     throw std::runtime_error(
-                        "Models::Gaussian::irls_update_beta():\n Matrix at dgesv_ solution step singular"
+                        "Gaussian::irls_update_beta():\n Matrix at dgesv_ solution step singular"
                     );
                 }
                 if (info < 0) {
                     cout << "dgesv_ info = " << info;
                     throw std::runtime_error(
-                        "Illegal artument."
+                        "Illegal argument."
                     );
                 }
                 beta_ = b;
             }
 
-            void fit(double beta_thresh = 0.001, std::size_t max_iter = 100){
+            void fit(arma::mat X, arma::vec y, double beta_thresh = 0.001, std::size_t max_iter = 100){
+                ModelBase::ingest_data(X, y);
                 double dB = 1.0;
                 std::size_t i = 0;
+                arma::vec past_beta(dim_);
                 while (dB > beta_thresh){
-                    arma::vec past_beta = beta_;
+                    past_beta = beta_;
                     irls_update_beta();
                     update_pars_wts();
                     dB = std::abs(beta_ - past_beta);
                     i++;
                     if (i > max_iter){
-                        std::cout << "Models::Gaussian::fit() warn:\n" 
+                        std::cout << "Gaussian::fit() warn:\n" 
                                   << "exceeded max_iter with delta-beta = " 
                                   << dB << "\n";
                         return;
@@ -131,7 +136,7 @@ namespace Models{
                 }
             }
 
-            inline double log_likelihood() {
+            double log_likelihood() {
                 return (
                     arma::accu(
                         arma::square(y_ - mu_) 
@@ -161,19 +166,49 @@ namespace Models{
         public:
             BinomLogit(
                 std::mt19937_64& rng,
-                std::size_t dim
-            ) : ModelBase(rng), dim_(dim) {}
-
-            inline void random_init() {
-                beta_ = VectorXd::random(dim_);
-                beta0_ = 
+                std::size_t dim,
+            ) : ModelBase(rng, dim) {
+                //random init
+                beta_ = arma::randn(dim_);
+                beta0_ = arma::randn<double>();
             }
+
+            void update_pars_wts() {
+                eta_ = beta_.t() * X_ + beta0_ * arma::ones<arma::vec>(y.n_rows);
+                mu_ = 1.0 / (1.0 + exp(-eta_));
+                w_ = mu_ * (1.0 - mu_);
+                z_ = eta_ + (y_ - mu_) % (1.0 / w_); // response
+            }
+            void irls_update_beta() {
+                nrhs = 1;
+                int info = 0;
+                std::vector<int> ipiv(dim_);
+                A = X_.t() * (w_ % X_.each_col());
+                b = X.t() * (w_ % z_);
+
+                dgesv_(&dim_, &nrhs, A.begin(), &dim_, ipiv.data(), b.begin(), &dim_, &info);
+
+                if (info > 0) {
+                    cout << "dgesv_ info = " << info;
+                    throw std::runtime_error(
+                        "Gaussian::irls_update_beta():\n Matrix at dgesv_ solution step singular"
+                    );
+                }
+                if (info < 0) {
+                    cout << "dgesv_ info = " << info;
+                    throw std::runtime_error(
+                        "Illegal argument."
+                    );
+                }
+                beta_ = b;
+            }
+
         private:
             std::size_t dim_;
-            VectorXd beta_;
+            arma::vec beta_;
             double beta0_;
-            VectorXd p_;
-            VectorXd w_;
+            arma::vec p_;
+            arma::vec w_;
     }
 
     class BinomLogit {

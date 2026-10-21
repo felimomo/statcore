@@ -60,9 +60,22 @@ void binom_coeff_test() {
     }
 }
 
+void arma_test() {
+    arma::mat A = arma::mat(5,5, arma::fill::ones);
+    arma::vec v = arma::randn(5);
+    std::cout << "v = \n" << v << "\n";
+    // for(arma::uword i=0; i<A.n_cols; i++){
+    //     A.col(i) *= v[i];
+    // }
+    //equivalent:
+    arma::mat B = v % A.each_col(); // % is entrywise product
+    std::cout << "diag(v) * A = \n" << B << "\n";
+}
+
 int main() {
     // basic_test_sums();
     // mat_test();
     // eigen_test();
-    binom_coeff_test();
+    // binom_coeff_test();
+    arma_test();
 }
