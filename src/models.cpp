@@ -97,6 +97,10 @@ namespace Models{
             arma::mat X_;
             arma::vec y_;
             arma::vec mu_; 
+
+            arma::vec eta_;
+            double w_;
+            arma::vec z_;
     };
 
     class BinomLogit : ModelBase {
