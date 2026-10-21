@@ -215,11 +215,18 @@ namespace Models{
 
             double log_likelihood(arma::mat X_obs, arma::vec y_obs) {
                 arma::vec p = 1.0 / (1.0 + arma::exp(- X_obs * beta_ - beta0_));
+                std::size_t n = y.n_rows;
+                double log_binom = (
+                    std::lgamma(n + 1) 
+                    - std::lgamma(arma::accu(y_obs) + 1)
+                    - std::lgamma(n - arma::accu(y_obs) + 1)
+                );
                 return arma::accu(
                     y_obs % arma::log(p) - (1 - y_obs) % arma::log(1 - p)
-                );
+                ) + log_binom;
             }
             double log_likelihood(arma::rowvec x_obs, double y_obs) {
+                double log_binom = std::lgamma(1 + 1) - std::lgamma(y_obs + 1) - std::lgamma(1 - y_obs + 1);
                 double p = 1.0 / (1.0 + exp(- x_obs * beta_ - beta0_));
                 return y_obs * log(p) - (1 - y_obs) * log(1 - p);
             }
@@ -244,7 +251,7 @@ namespace Models{
             void update_pars_wts() override {
                 eta_ = X_ * beta_ + beta0_;
                 eta_ = arma::clamp(eta_, -eta_max_, eta_max_);
-                lambda_ = exp(eta_);
+                lambda_ = arma::exp(eta_);
                 w_ = lambda_; // dlamda / deta = lambda. => w = lambda^2 / lambda <-- variance
                 z_ = eta_ + (y_ - lambda_) % (1.0 / lambda_); // response, denominator is dlambda / deta
             }
@@ -270,7 +277,12 @@ namespace Models{
                     );
                 }
                 beta_ = b;
-            }            
+            }
+            
+            double log_likelihood(arma::rowvec x_obs, double y_obs) {
+                double lambda = exp(x_obs * beta_ + beta0_);
+
+            }
             
         private:
             double lambda_;
