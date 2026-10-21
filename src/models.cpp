@@ -97,7 +97,7 @@ namespace Models{
                 b = w_ * X.t() * z_;
 
                 dgesv_(&dim_, &nrhs, A.begin(), &dim_, ipiv.data(), b.begin(), &dim_, &info);
-                
+
                 if (info > 0) {
                     cout << "dgesv_ info = " << info;
                     throw std::runtime_error(
@@ -111,6 +111,24 @@ namespace Models{
                     );
                 }
                 beta_ = b;
+            }
+
+            void fit(double beta_thresh = 0.001, std::size_t max_iter = 100){
+                double dB = 1.0;
+                std::size_t i = 0;
+                while (dB > beta_thresh){
+                    arma::vec past_beta = beta_;
+                    irls_update_beta();
+                    update_pars_wts();
+                    dB = std::abs(beta_ - past_beta);
+                    i++;
+                    if (i > max_iter){
+                        std::cout << "Models::Gaussian::fit() warn:\n" 
+                                  << "exceeded max_iter with delta-beta = " 
+                                  << dB << "\n";
+                        return;
+                    }
+                }
             }
 
             inline double log_likelihood() {
