@@ -104,8 +104,8 @@ namespace Models{
             }
 
             void update_pars_wts() override {
-                eta_ = X_ * beta_ + beta0_;
-                mu_ = eta_; // identity link
+                // eta_ = X_ * beta_ + beta0_; // unnecessary
+                // tr_mu_ = eta_; // identity link
                 w_ = 1 / pow(sigma_, 2) // weights coincidentally independent of mu_ in this Gaussian case.
                 z_ = y_; // response
             }
@@ -139,50 +139,36 @@ namespace Models{
                 beta_ = b;
             }
 
-            // void fit(arma::mat X, arma::vec y, double beta_thresh = 0.001, std::size_t max_iter = 100){
-            //     ModelBase::ingest_data(X, y);
-            //     double dB = 1.0;
-            //     std::size_t i = 0;
-            //     arma::vec past_beta(dim_);
-            //     while (dB > beta_thresh){
-            //         past_beta = beta_;
-            //         irls_update_beta();
-            //         update_pars_wts();
-            //         dB = std::abs(beta_ - past_beta);
-            //         i++;
-            //         if (i > max_iter){
-            //             std::cout << "Gaussian::fit() warn:\n" 
-            //                       << "exceeded max_iter with delta-beta = " 
-            //                       << dB << "\n";
-            //             return;
-            //         }
-            //     }
-            // }
-
-            double log_likelihood() {
+            double log_likelihood(arma::mat X_obs, arma::vec y_obs) {
                 return (
                     arma::accu(
-                        arma::square(y_ - mu_) 
+                        arma::square(y_obs - X_obs * beta_ - beta0_) 
                     ) / (2 * pow(sigma_, 2))
-                    - 0.5 * y_.n_cols * log(2 * pi * pow(sigma_, 2))
+                    - 0.5 * y_obs.n_cols * log(2 * pi * pow(sigma_, 2))
+                );
+            }
+            double log_likelihood(arma::rowvec x_obs, double y_obs) {
+                return (
+                    arma::square(y_obs - x_obs * beta_ - beta0_)  / (2 * pow(sigma_, 2))
+                    - 0.5 * y_obs.n_cols * log(2 * pi * pow(sigma_, 2))
                 );
             }
 
-
-
         private:
+            // constant parameters
             std::size_t dim_;
-            arma::vec beta_;
-            double beta0_;
             double sigma_;
 
+            // training
             arma::mat X_;
             arma::vec y_;
-            arma::vec mu_; 
-
             arma::vec eta_;
             double w_;
             arma::vec z_;
+
+            // inference
+            arma::vec beta_;
+            double beta0_;
     };
 
     class BinomLogit : ModelBase {
@@ -199,9 +185,9 @@ namespace Models{
             void update_pars_wts() override {
                 eta_ = X_ * beta_ + beta0_;
                 eta_ = arma::clamp(eta_, -eta_max_, eta_max_);
-                p_ = 1.0 / (1.0 + exp(-eta_));
+                p_ = 1.0 / (1.0 + arma::exp(-eta_));
                 w_ = p_ * (1.0 - p_);
-                z_ = eta_ + (y_ - p_) % (1.0 / (p_ * (1.0 - p_))); // response. denominator is dp / deta
+                z_ = eta_ + (y_ - p_) % (1.0 / (p_ % (1.0 - p_))); // response. denominator is dp / deta
             }
             void irls_update_beta() override {
                 nrhs = 1;
@@ -226,25 +212,17 @@ namespace Models{
                 }
                 beta_ = b;
             }
-            // void fit(arma::mat X, arma::vec y, double beta_thresh = 0.001, std::size_t max_iter = 100){
-            //     ModelBase::ingest_data(X, y);
-            //     double dB = 1.0;
-            //     std::size_t i = 0;
-            //     arma::vec past_beta(dim_);
-            //     while (dB > beta_thresh){
-            //         past_beta = beta_;
-            //         irls_update_beta();
-            //         update_pars_wts();
-            //         dB = std::abs(beta_ - past_beta);
-            //         i++;
-            //         if (i > max_iter){
-            //             std::cout << "Gaussian::fit() warn:\n" 
-            //                       << "exceeded max_iter with delta-beta = " 
-            //                       << dB << "\n";
-            //             return;
-            //         }
-            //     }
-            // }
+
+            double log_likelihood(arma::mat X_obs, arma::vec y_obs) {
+                arma::vec p = 1.0 / (1.0 + arma::exp(- X_obs * beta_ - beta0_));
+                return arma::accu(
+                    y_obs % arma::log(p) - (1 - y_obs) % arma::log(1 - p)
+                );
+            }
+            double log_likelihood(arma::rowvec x_obs, double y_obs) {
+                double p = 1.0 / (1.0 + exp(- x_obs * beta_ - beta0_));
+                return y_obs * log(p) - (1 - y_obs) * log(1 - p);
+            }
 
         private:
             std::size_t dim_;
@@ -292,27 +270,7 @@ namespace Models{
                     );
                 }
                 beta_ = b;
-            }
-            // void fit(arma::mat X, arma::vec y, double beta_thresh = 0.001, std::size_t max_iter = 100){
-            //     ModelBase::ingest_data(X, y);
-            //     double dB = 1.0;
-            //     std::size_t i = 0;
-            //     arma::vec past_beta(dim_);
-            //     while (dB > beta_thresh){
-            //         past_beta = beta_;
-            //         irls_update_beta();
-            //         update_pars_wts();
-            //         dB = std::abs(beta_ - past_beta);
-            //         i++;
-            //         if (i > max_iter){
-            //             std::cout << "Gaussian::fit() warn:\n" 
-            //                       << "exceeded max_iter with delta-beta = " 
-            //                       << dB << "\n";
-            //             return;
-            //         }
-            //     }
-            // }
-            
+            }            
             
         private:
             double lambda_;
