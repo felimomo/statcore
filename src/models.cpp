@@ -81,13 +81,36 @@ namespace Models{
                 eta_ = beta_.t() * X_ + beta0_ * arma::ones<arma::vec>(y.n_rows);
                 mu_ = eta_; // identity link
                 w_ = 1 / pow(sigma_, 2) // weights coincidentally independent of mu_ in this Gaussian case.
-                z_ = y_; response
+                z_ = y_; // response
             }
 
             void irls_update_beta() {
-                // tbd: LAPACK call to solve:
+                // LAPACK call to solve:
                 //      X.T W X beta = X.T W z
+                //      
+                //      notice that this equation happens in dim_ -> dim_ space.
                 // Solve in-place (LAPACK style) on beta_.
+                nrhs = 1;
+                int info = 0;
+                std::vector<int> ipiv(dim_);
+                A = w_ * X_.t() * X_;
+                b = w_ * X.t() * z_;
+
+                dgesv_(&dim_, &nrhs, A.begin(), &dim_, ipiv.data(), b.begin(), &dim_, &info);
+                
+                if (info > 0) {
+                    cout << "dgesv_ info = " << info;
+                    throw std::runtime_error(
+                        "Models::Gaussian::irls_update_beta():\n Matrix at dgesv_ solution step singular"
+                    );
+                }
+                if (info < 0) {
+                    cout << "dgesv_ info = " << info;
+                    throw std::runtime_error(
+                        "Illegal artument."
+                    );
+                }
+                beta_ = b;
             }
 
             inline double log_likelihood() {
