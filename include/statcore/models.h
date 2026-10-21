@@ -9,6 +9,7 @@ namespace Models{
             explicit ModelBase(std::mt19937_64& rng, std::size_t dim);
             virtual ~ModelBase();
             void ingest_data(arma::mat X, arma::vec y);
+            void fit(arma::mat X, arma::vec y, double beta_thresh = 0.001, std::size_t max_iter = 100);
         protected: // to be able to access from child classes
             std::mt19937_64& rng_;
             std::size_t dim_;
@@ -25,21 +26,22 @@ namespace Models{
             );
             void update_pars_wts();
             void irls_update_beta();
-            void fit(arma::mat X, arma::vec y, double beta_thresh = 0.001, std::size_t max_iter = 100);
             double log_likelihood();
         private:
+            // constant parameters
             std::size_t dim_;
-            arma::vec beta_;
-            double beta0_;
             double sigma_;
 
+            // training
             arma::mat X_;
             arma::vec y_;
-            arma::vec mu_; 
-
             arma::vec eta_;
             double w_;
             arma::vec z_;
+
+            // inference
+            arma::vec beta_;
+            double beta0_;
     }
 
     class BinomLogit : ModelBase {
@@ -50,7 +52,6 @@ namespace Models{
             );
             void update_pars_wts();
             void irls_update_beta();
-            void fit(arma::mat X, arma::vec y, double beta_thresh = 0.001, std::size_t max_iter = 100);
             double log_likelihood();
         private:
             std::size_t dim_;
@@ -69,7 +70,6 @@ namespace Models{
             );
             void update_pars_wts();
             void irls_update_beta();
-            void fit(arma::mat X, arma::vec y, double beta_thresh = 0.001, std::size_t max_iter = 100);
             double log_likelihood();
         private:
             double lambda_;
