@@ -61,6 +61,27 @@ namespace Models{
                 X_ = X;
                 y_ = y;
             }
+            // TBD: not clear if this is a good idea: access to beta_, initialized child parameter?
+            //
+            // void fit_base(std::string model_name, arma::mat X, arma::vec y, double beta_thresh = 0.001, std::size_t max_iter = 100){
+            //     ModelBase::ingest_data(X, y);
+            //     double dB = 1.0;
+            //     std::size_t i = 0;
+            //     arma::vec past_beta(dim_);
+            //     while (dB > beta_thresh){
+            //         past_beta = beta_;
+            //         irls_update_beta();
+            //         update_pars_wts();
+            //         dB = std::abs(beta_ - past_beta);
+            //         i++;
+            //         if (i > max_iter){
+            //             std::cout << model_name << "::fit() warn:\n" 
+            //                       << "exceeded max_iter with delta-beta = " 
+            //                       << dB << "\n";
+            //             return;
+            //         }
+            //     }
+            // }
         protected: // to be able to access from child classes
             std::mt19937_64& rng_;
             std::size_t dim_;
@@ -202,6 +223,25 @@ namespace Models{
                 }
                 beta_ = b;
             }
+            void fit(arma::mat X, arma::vec y, double beta_thresh = 0.001, std::size_t max_iter = 100){
+                ModelBase::ingest_data(X, y);
+                double dB = 1.0;
+                std::size_t i = 0;
+                arma::vec past_beta(dim_);
+                while (dB > beta_thresh){
+                    past_beta = beta_;
+                    irls_update_beta();
+                    update_pars_wts();
+                    dB = std::abs(beta_ - past_beta);
+                    i++;
+                    if (i > max_iter){
+                        std::cout << "Gaussian::fit() warn:\n" 
+                                  << "exceeded max_iter with delta-beta = " 
+                                  << dB << "\n";
+                        return;
+                    }
+                }
+            }
 
         private:
             std::size_t dim_;
@@ -210,32 +250,6 @@ namespace Models{
             arma::vec p_;
             arma::vec w_;
     }
-
-    class BinomLogit {
-        public:
-            BinomLogit(
-                std::size_t N, 
-                double p, 
-                VectorXd beta,
-                double beta0
-            ) : ModelBase(rng), beta_(beta), beta0_(beta0) {}
-
-            double likelihood(VectorXd x) {
-                return 1.0 / (1.0 + exp(-beta_.dot(x) - beta0_)); //probability of (y = 1 | x)
-            }
-            double predict(VectorXd x) {
-                L = likelihood(x);
-                std::uniform_real_distribution<> dis(0.0, 1.0);
-                if (dis(rng_) <= L) {
-                    return 1;
-                } else {
-                    return 0;
-                }
-            }
-        private:
-            VectorXd beta_;
-            double beta0_;
-    };
 
     class PoissonLog {
         public:
