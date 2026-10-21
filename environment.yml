@@ -10,6 +10,7 @@ dependencies:
   # c++ tools
   - armadillo
   - eigen
+  - libblas=*=*openblas # includes liblapack, '=*=*...' important
 
   # python
   - python=3.12
