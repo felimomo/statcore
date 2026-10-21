@@ -39,7 +39,11 @@ namespace Models{
 
     class ModelBase {
         public:
-            explicit ModelBase(std::mt19937_64& rng, std::size_t dim) rng_(rng), dim_(dim) {}
+            explicit ModelBase(std::mt19937_64& rng, std::size_t dim) rng_(rng), dim_(dim) {
+                // initialize random normal:
+                beta_ = arma::randn(dim_);
+                beta0_ = arma::randn<double>();
+            }
             virtual ~ModelBase() = default; // destroy resources called from derived class
             virtual double likelihood(VectorXd x) = 0.;
 
@@ -53,32 +57,38 @@ namespace Models{
                 X_ = X;
                 y_ = y;
             }
-            // TBD: not clear if this is a good idea: access to beta_, initialized child parameter?
-            //
-            // void fit_base(std::string model_name, arma::mat X, arma::vec y, double beta_thresh = 0.001, std::size_t max_iter = 100){
-            //     ModelBase::ingest_data(X, y);
-            //     double dB = 1.0;
-            //     std::size_t i = 0;
-            //     arma::vec past_beta(dim_);
-            //     while (dB > beta_thresh){
-            //         past_beta = beta_;
-            //         irls_update_beta();
-            //         update_pars_wts();
-            //         dB = std::abs(beta_ - past_beta);
-            //         i++;
-            //         if (i > max_iter){
-            //             std::cout << model_name << "::fit() warn:\n" 
-            //                       << "exceeded max_iter with delta-beta = " 
-            //                       << dB << "\n";
-            //             return;
-            //         }
-            //     }
-            // }
+            void fit(arma::mat X, arma::vec y, double beta_thresh = 0.001, std::size_t max_iter = 100){
+                ingest_data(X, y);
+                double dB = 1.0;
+                std::size_t i = 0;
+                arma::vec past_beta(dim_);
+                while (dB > beta_thresh){
+                    past_beta = beta_;
+                    irls_update_beta();
+                    update_pars_wts();
+                    dB = std::abs(beta_ - past_beta);
+                    i++;
+                    if (i > max_iter){
+                        std::cout << "ModelBase::fit() warn:\n" 
+                                  << "exceeded max_iter with delta-beta = " 
+                                  << dB << "\n";
+                        return;
+                    }
+                }
+            }
+
         protected: // to be able to access from child classes
             std::mt19937_64& rng_;
             std::size_t dim_;
             arma::mat X_;
             arma::vec y_;
+            arma::vec beta_;
+            double beta0_;
+
+        private:
+            // purely abstract methods to be over-ridden
+            virtual void irls_update_beta()=0;
+            virtual void update_pars_wts()=0;
     }
 
     class Guassian : ModelBase {
@@ -93,14 +103,14 @@ namespace Models{
                 beta0_ = arma::randn<double>();
             }
 
-            void update_pars_wts() {
+            void update_pars_wts() override {
                 eta_ = X_ * beta_ + beta0_;
                 mu_ = eta_; // identity link
                 w_ = 1 / pow(sigma_, 2) // weights coincidentally independent of mu_ in this Gaussian case.
                 z_ = y_; // response
             }
 
-            void irls_update_beta() {
+            void irls_update_beta() override {
                 // LAPACK call to solve:
                 //      X.T W X beta = X.T W z
                 //      
@@ -129,25 +139,25 @@ namespace Models{
                 beta_ = b;
             }
 
-            void fit(arma::mat X, arma::vec y, double beta_thresh = 0.001, std::size_t max_iter = 100){
-                ModelBase::ingest_data(X, y);
-                double dB = 1.0;
-                std::size_t i = 0;
-                arma::vec past_beta(dim_);
-                while (dB > beta_thresh){
-                    past_beta = beta_;
-                    irls_update_beta();
-                    update_pars_wts();
-                    dB = std::abs(beta_ - past_beta);
-                    i++;
-                    if (i > max_iter){
-                        std::cout << "Gaussian::fit() warn:\n" 
-                                  << "exceeded max_iter with delta-beta = " 
-                                  << dB << "\n";
-                        return;
-                    }
-                }
-            }
+            // void fit(arma::mat X, arma::vec y, double beta_thresh = 0.001, std::size_t max_iter = 100){
+            //     ModelBase::ingest_data(X, y);
+            //     double dB = 1.0;
+            //     std::size_t i = 0;
+            //     arma::vec past_beta(dim_);
+            //     while (dB > beta_thresh){
+            //         past_beta = beta_;
+            //         irls_update_beta();
+            //         update_pars_wts();
+            //         dB = std::abs(beta_ - past_beta);
+            //         i++;
+            //         if (i > max_iter){
+            //             std::cout << "Gaussian::fit() warn:\n" 
+            //                       << "exceeded max_iter with delta-beta = " 
+            //                       << dB << "\n";
+            //             return;
+            //         }
+            //     }
+            // }
 
             double log_likelihood() {
                 return (
@@ -186,14 +196,14 @@ namespace Models{
                 beta0_ = arma::randn<double>();
             }
 
-            void update_pars_wts() {
+            void update_pars_wts() override {
                 eta_ = X_ * beta_ + beta0_;
                 eta_ = arma::clamp(eta_, -eta_max_, eta_max_);
                 p_ = 1.0 / (1.0 + exp(-eta_));
                 w_ = p_ * (1.0 - p_);
                 z_ = eta_ + (y_ - p_) % (1.0 / (p_ * (1.0 - p_))); // response. denominator is dp / deta
             }
-            void irls_update_beta() {
+            void irls_update_beta() override {
                 nrhs = 1;
                 int info = 0;
                 std::vector<int> ipiv(dim_);
@@ -216,25 +226,25 @@ namespace Models{
                 }
                 beta_ = b;
             }
-            void fit(arma::mat X, arma::vec y, double beta_thresh = 0.001, std::size_t max_iter = 100){
-                ModelBase::ingest_data(X, y);
-                double dB = 1.0;
-                std::size_t i = 0;
-                arma::vec past_beta(dim_);
-                while (dB > beta_thresh){
-                    past_beta = beta_;
-                    irls_update_beta();
-                    update_pars_wts();
-                    dB = std::abs(beta_ - past_beta);
-                    i++;
-                    if (i > max_iter){
-                        std::cout << "Gaussian::fit() warn:\n" 
-                                  << "exceeded max_iter with delta-beta = " 
-                                  << dB << "\n";
-                        return;
-                    }
-                }
-            }
+            // void fit(arma::mat X, arma::vec y, double beta_thresh = 0.001, std::size_t max_iter = 100){
+            //     ModelBase::ingest_data(X, y);
+            //     double dB = 1.0;
+            //     std::size_t i = 0;
+            //     arma::vec past_beta(dim_);
+            //     while (dB > beta_thresh){
+            //         past_beta = beta_;
+            //         irls_update_beta();
+            //         update_pars_wts();
+            //         dB = std::abs(beta_ - past_beta);
+            //         i++;
+            //         if (i > max_iter){
+            //             std::cout << "Gaussian::fit() warn:\n" 
+            //                       << "exceeded max_iter with delta-beta = " 
+            //                       << dB << "\n";
+            //             return;
+            //         }
+            //     }
+            // }
 
         private:
             std::size_t dim_;
@@ -253,14 +263,14 @@ namespace Models{
                 beta0_ = arma::randn<double>();
             }
 
-            void update_pars_wts() {
+            void update_pars_wts() override {
                 eta_ = X_ * beta_ + beta0_;
                 eta_ = arma::clamp(eta_, -eta_max_, eta_max_);
                 lambda_ = exp(eta_);
                 w_ = lambda_; // dlamda / deta = lambda. => w = lambda^2 / lambda <-- variance
                 z_ = eta_ + (y_ - lambda_) % (1.0 / lambda_); // response, denominator is dlambda / deta
             }
-            void irls_update_beta() {
+            void irls_update_beta() override {
                 nrhs = 1;
                 int info = 0;
                 std::vector<int> ipiv(dim_);
@@ -283,25 +293,25 @@ namespace Models{
                 }
                 beta_ = b;
             }
-            void fit(arma::mat X, arma::vec y, double beta_thresh = 0.001, std::size_t max_iter = 100){
-                ModelBase::ingest_data(X, y);
-                double dB = 1.0;
-                std::size_t i = 0;
-                arma::vec past_beta(dim_);
-                while (dB > beta_thresh){
-                    past_beta = beta_;
-                    irls_update_beta();
-                    update_pars_wts();
-                    dB = std::abs(beta_ - past_beta);
-                    i++;
-                    if (i > max_iter){
-                        std::cout << "Gaussian::fit() warn:\n" 
-                                  << "exceeded max_iter with delta-beta = " 
-                                  << dB << "\n";
-                        return;
-                    }
-                }
-            }
+            // void fit(arma::mat X, arma::vec y, double beta_thresh = 0.001, std::size_t max_iter = 100){
+            //     ModelBase::ingest_data(X, y);
+            //     double dB = 1.0;
+            //     std::size_t i = 0;
+            //     arma::vec past_beta(dim_);
+            //     while (dB > beta_thresh){
+            //         past_beta = beta_;
+            //         irls_update_beta();
+            //         update_pars_wts();
+            //         dB = std::abs(beta_ - past_beta);
+            //         i++;
+            //         if (i > max_iter){
+            //             std::cout << "Gaussian::fit() warn:\n" 
+            //                       << "exceeded max_iter with delta-beta = " 
+            //                       << dB << "\n";
+            //             return;
+            //         }
+            //     }
+            // }
             
             
         private:
