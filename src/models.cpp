@@ -25,7 +25,7 @@ extern "C" {
 namespace Models{
 
     using std::exp;
-    using std::numbers::pi;
+    using std::numbers::pi; 
 
     inline double binom_coeff(std::size_t N, std::size_t m) {
         std::size_t n = std::max(m, N-m);
@@ -102,7 +102,7 @@ namespace Models{
             }
 
             void update_pars_wts() {
-                eta_ = beta_.t() * X_ + beta0_ * arma::ones<arma::vec>(y.n_rows);
+                eta_ = X_ * beta_ + beta0_;
                 mu_ = eta_; // identity link
                 w_ = 1 / pow(sigma_, 2) // weights coincidentally independent of mu_ in this Gaussian case.
                 z_ = y_; // response
@@ -195,10 +195,11 @@ namespace Models{
             }
 
             void update_pars_wts() {
-                eta_ = beta_.t() * X_ + beta0_ * arma::ones<arma::vec>(y.n_rows);
-                mu_ = 1.0 / (1.0 + exp(-eta_));
-                w_ = mu_ * (1.0 - mu_);
-                z_ = eta_ + (y_ - mu_) % (1.0 / w_); // response
+                eta_ = X_ * beta_ + beta0_;
+                eta_ = arma::clamp(eta_, -eta_max_, eta_max_);
+                p_ = 1.0 / (1.0 + exp(-eta_));
+                w_ = p_ * (1.0 - p_);
+                z_ = eta_ + (y_ - p_) % (1.0 / (p_ * (1.0 - p_))); // response. denominator is dp / deta
             }
             void irls_update_beta() {
                 nrhs = 1;
@@ -249,15 +250,74 @@ namespace Models{
             double beta0_;
             arma::vec p_;
             arma::vec w_;
+            constexpr double eta_max_ = 700.0;
     }
 
-    class PoissonLog {
+    class PoissonLog : ModelBase {
         public:
-            PoissonLog(lambda, std::mt19937_64& rng) : ModelBase(rng), lambda_(lambda) {}
+            PoissonLog(std::mt19937_64& rng, std::size_t dim) : ModelBase(rng, dim) {
+                //random init
+                beta_ = arma::randn(dim_);
+                beta0_ = arma::randn<double>();
+            }
+
+            void update_pars_wts() {
+                eta_ = X_ * beta_ + beta0_;
+                eta_ = arma::clamp(eta_, -eta_max_, eta_max_);
+                lambda_ = exp(eta_);
+                w_ = lambda_; // dlamda / deta = lambda. => w = lambda^2 / lambda <-- variance
+                z_ = eta_ + (y_ - lambda_) % (1.0 / lambda_); // response, denominator is dlambda / deta
+            }
+            void irls_update_beta() {
+                nrhs = 1;
+                int info = 0;
+                std::vector<int> ipiv(dim_);
+                A = X_.t() * (w_ % X_.each_col());
+                b = X.t() * (w_ % z_);
+
+                dgesv_(&dim_, &nrhs, A.begin(), &dim_, ipiv.data(), b.begin(), &dim_, &info);
+
+                if (info > 0) {
+                    cout << "dgesv_ info = " << info;
+                    throw std::runtime_error(
+                        "Gaussian::irls_update_beta():\n Matrix at dgesv_ solution step singular"
+                    );
+                }
+                if (info < 0) {
+                    cout << "dgesv_ info = " << info;
+                    throw std::runtime_error(
+                        "Illegal argument."
+                    );
+                }
+                beta_ = b;
+            }
+            void fit(arma::mat X, arma::vec y, double beta_thresh = 0.001, std::size_t max_iter = 100){
+                ModelBase::ingest_data(X, y);
+                double dB = 1.0;
+                std::size_t i = 0;
+                arma::vec past_beta(dim_);
+                while (dB > beta_thresh){
+                    past_beta = beta_;
+                    irls_update_beta();
+                    update_pars_wts();
+                    dB = std::abs(beta_ - past_beta);
+                    i++;
+                    if (i > max_iter){
+                        std::cout << "Gaussian::fit() warn:\n" 
+                                  << "exceeded max_iter with delta-beta = " 
+                                  << dB << "\n";
+                        return;
+                    }
+                }
+            }
             
-            double likelihood(VectorXd)
+            
         private:
             double lambda_;
+            arma::vec beta_;
+            double beta0_;
+            arma::vec w_;
+            constexpr double eta_max_ = 700.0;
     };
 
 }
