@@ -37,14 +37,6 @@ namespace Models{
         return result;
     }
 
-    inline double logit(double p) {
-        return std::log(p / (1 - p));
-    }
-
-    inline double logistic(double a) {
-        return 1.0 / (1.0 + exp(-a))
-    }
-
     class ModelBase {
         public:
             explicit ModelBase(std::mt19937_64& rng, std::size_t dim) rng_(rng), dim_(dim) {}
