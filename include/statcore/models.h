@@ -1,16 +1,19 @@
 #ifndef MODELS
 #define MODELS
 
+#include  <cstddef>
+#include <Armadillo>
+
 namespace Models{
     inline double binom_coeff(std::size_t N, std::size_t m);
 
     class ModelBase {
         public:
             explicit ModelBase(std::size_t dim);
-            virtual ~ModelBase();
-            virtual double likelihood(arma::rowvec x_obs, double y_obs);
+            virtual ~ModelBase() = default;
+            virtual double likelihood(arma::rowvec x_obs, double y_obs) = 0.;
             void ingest_data(arma::mat X, arma::vec y);
-            void fit(arma::mat X, arma::vec y, double beta_thresh = 0.001, std::size_t max_iter = 100);
+            void fit(arma::mat X, arma::vec y, double beta_thresh, std::size_t max_iter);
         protected: // to be able to access from child classes
             std::size_t dim_;
             arma::mat X_;
@@ -20,13 +23,13 @@ namespace Models{
         private:
             virtual void irls_update_beta()=0;
             virtual void update_pars_wts()=0;
-    }
+    };
 
-    class Guassian : ModelBase {
+    class Gaussian : ModelBase {
         public:
             Gaussian (
                 std::size_t dim,
-                double sigma,
+                double sigma
             );
             void update_pars_wts();
             void irls_update_beta();
@@ -47,7 +50,7 @@ namespace Models{
             // inference
             arma::vec beta_;
             double beta0_;
-    }
+    };
 
     class BinomLogit : ModelBase {
         public:
@@ -64,14 +67,14 @@ namespace Models{
             double beta0_;
             arma::vec p_;
             arma::vec w_;
-            constexpr double eta_max_;
-    }
+            const double eta_max_=700.0;
+    };
 
     class PoissonLog : ModelBase {
         public:
             PoissonLog(
                 std::mt19937_64& rng,
-                std::size_t dim,
+                std::size_t dim
             );
             void update_pars_wts();
             void irls_update_beta();
@@ -82,8 +85,8 @@ namespace Models{
             arma::vec beta_;
             double beta0_;
             arma::vec w_;
-            constexpr double eta_max_;
-    }
+            const double eta_max_=700.0;
+    };
 
 
 }

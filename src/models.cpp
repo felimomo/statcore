@@ -37,66 +37,54 @@ namespace Models{
         return result;
     }
 
-    class ModelBase {
-        public:
-            explicit ModelBase(std::size_t dim) dim_(dim) {
-                // initialize random normal:
-                beta_ = arma::randn(dim_);
-                beta0_ = arma::randn<double>();
+    ModelBase::ModelBase(std::size_t dim) dim_(dim) {
+        // initialize random normal:
+        beta_ = arma::randn(dim_);
+        beta0_ = arma::randn<double>();
+    }
+    void ModelBase::ingest_data(arma::mat X, arma::vec y) {
+        if (y.n_rows != X.n_rows) {
+            throw std::invalid_argument("ModelBase::ingest_data: Numer of rows in X and y do not match.");
+        }
+        if (X.n_cols != dim_) {
+            throw std::invalid_argument("ModelBase::ingest_data: Numer of cols in X does not match dim.");
+        }
+        X_ = X;
+        y_ = y;
+    }
+    void ModelBase::fit(
+        arma::mat X, 
+        arma::vec y, 
+        double beta_thresh = 0.001, 
+        std::size_t max_iter = 100
+    ) {
+        ingest_data(X, y);
+        double dB = 1.0;
+        std::size_t i = 0;
+        arma::vec past_beta(dim_);
+        while (dB > beta_thresh){
+            past_beta = beta_;
+            irls_update_beta();
+            update_pars_wts();
+            dB = std::abs(beta_ - past_beta);
+            i++;
+            if (i > max_iter){
+                std::cout << "ModelBase::fit() warn:\n" 
+                            << "exceeded max_iter with delta-beta = " 
+                            << dB << "\n";
+                return;
             }
-            virtual ~ModelBase() = default; // destroy resources called from derived class
-            virtual double log_likelihood(arma::rowvec x_obs, double y_obs) = 0.;
-
-            void ingest_data(arma::mat X, arma::vec y) {
-                if (y.n_rows != X.n_rows) {
-                    throw std::invalid_argument("ModelBase::ingest_data: Numer of rows in X and y do not match.");
-                }
-                if (X.n_cols != dim_) {
-                    throw std::invalid_argument("ModelBase::ingest_data: Numer of cols in X does not match dim.");
-                }
-                X_ = X;
-                y_ = y;
-            }
-            void fit(arma::mat X, arma::vec y, double beta_thresh = 0.001, std::size_t max_iter = 100){
-                ingest_data(X, y);
-                double dB = 1.0;
-                std::size_t i = 0;
-                arma::vec past_beta(dim_);
-                while (dB > beta_thresh){
-                    past_beta = beta_;
-                    irls_update_beta();
-                    update_pars_wts();
-                    dB = std::abs(beta_ - past_beta);
-                    i++;
-                    if (i > max_iter){
-                        std::cout << "ModelBase::fit() warn:\n" 
-                                  << "exceeded max_iter with delta-beta = " 
-                                  << dB << "\n";
-                        return;
-                    }
-                }
-            }
-            arma::vec get_beta(){
-                return beta_;
-            }
-            double get_beta0(){
-                return beta0_;
-            }
-
-        protected: // to be able to access from child classes
-            std::size_t dim_;
-            arma::mat X_;
-            arma::vec y_;
-            arma::vec beta_;
-            double beta0_;
-
-        private:
-            // purely abstract methods to be over-ridden
-            virtual void irls_update_beta()=0;
-            virtual void update_pars_wts()=0;
+        }
+    }
+    arma::vec ModelBase::get_beta(){
+        return beta_;
+    }
+    double ModelBase::get_beta0(){
+        return beta0_;
     }
 
-    class Guassian : ModelBase {
+
+    class Gaussian : ModelBase {
         public:
             Gaussian (
                 std::size_t dim,
@@ -240,8 +228,8 @@ namespace Models{
             double beta0_;
             arma::vec p_;
             arma::vec w_;
-            constexpr double eta_max_ = 700.0;
-    }
+            const double eta_max_ = 700.0;
+    };
 
     class PoissonLog : ModelBase {
         public:
@@ -292,7 +280,7 @@ namespace Models{
             arma::vec beta_;
             double beta0_;
             arma::vec w_;
-            constexpr double eta_max_ = 700.0;
+            const double eta_max_ = 700.0;
     };
 
 }
