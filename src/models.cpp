@@ -39,13 +39,13 @@ namespace Models{
 
     class ModelBase {
         public:
-            explicit ModelBase(std::mt19937_64& rng, std::size_t dim) rng_(rng), dim_(dim) {
+            explicit ModelBase(std::size_t dim) dim_(dim) {
                 // initialize random normal:
                 beta_ = arma::randn(dim_);
                 beta0_ = arma::randn<double>();
             }
             virtual ~ModelBase() = default; // destroy resources called from derived class
-            virtual double likelihood(VectorXd x) = 0.;
+            virtual double log_likelihood(arma::rowvec x_obs, double y_obs) = 0.;
 
             void ingest_data(arma::mat X, arma::vec y) {
                 if (y.n_rows != X.n_rows) {
@@ -76,9 +76,14 @@ namespace Models{
                     }
                 }
             }
+            arma::vec get_beta(){
+                return beta_;
+            }
+            double get_beta0(){
+                return beta0_;
+            }
 
         protected: // to be able to access from child classes
-            std::mt19937_64& rng_;
             std::size_t dim_;
             arma::mat X_;
             arma::vec y_;
@@ -95,9 +100,8 @@ namespace Models{
         public:
             Gaussian (
                 std::size_t dim,
-                double sigma,
-                std::mt19937_64& rng
-            ): ModelBase(rng, dim), sigma_(sigma) {
+                double sigma
+            ): ModelBase(dim), sigma_(sigma) {
                 // initialize random normal:
                 beta_ = arma::randn(dim_);
                 beta0_ = arma::randn<double>();
@@ -174,9 +178,8 @@ namespace Models{
     class BinomLogit : ModelBase {
         public:
             BinomLogit(
-                std::mt19937_64& rng,
-                std::size_t dim,
-            ) : ModelBase(rng, dim) {
+                std::size_t dim
+            ) : ModelBase(dim) {
                 //random init
                 beta_ = arma::randn(dim_);
                 beta0_ = arma::randn<double>();
@@ -242,7 +245,7 @@ namespace Models{
 
     class PoissonLog : ModelBase {
         public:
-            PoissonLog(std::mt19937_64& rng, std::size_t dim) : ModelBase(rng, dim) {
+            PoissonLog(std::size_t dim) : ModelBase(dim) {
                 //random init
                 beta_ = arma::randn(dim_);
                 beta0_ = arma::randn<double>();
