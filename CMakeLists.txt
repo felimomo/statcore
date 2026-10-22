@@ -40,11 +40,11 @@ target_include_directories(matmult PUBLIC
 target_link_libraries(matmult PUBLIC ${ARMADILLO_LIBRARIES})
 target_compile_options(matmult PRIVATE -O3 -fopenmp-simd -mcpu=apple-m2)
 
-add_library(agg src/models.cpp)
-target_include_directories(agg PUBLIC
+add_library(models src/models.cpp)
+target_include_directories(models PUBLIC
   ${CMAKE_CURRENT_SOURCE_DIR}/include
   ${ARMADILLO_INCLUDE_DIRS})
-target_link_libraries(agg PUBLIC ${ARMADILLO_LIBRARIES})
+target_link_libraries(models PUBLIC ${ARMADILLO_LIBRARIES})
 
 ##
 # other executables
@@ -62,6 +62,10 @@ target_compile_options(sum_bmk PRIVATE -Wall -Wextra -Wpedantic)
 add_executable(mat_bmk bench/mat_bmk.cpp)
 target_link_libraries(mat_bmk PRIVATE matmult)
 target_compile_options(mat_bmk PRIVATE -Wall -Wextra -Wpedantic)
+
+add_executable(model_tests tests/model_tests.cpp)
+target_link_libraries(model_tests PRIVATE models)
+target_compile_options(model_tests PRIVATE -O3 -Wall -Wextra -Wpedantic)
 
 # add_library(statcore STATIC src/main.cpp)
 
