@@ -23,7 +23,9 @@ find_package(Eigen3 REQUIRED NO_MODULE)
 #   ${ARMADILLO_INCLUDE_DIRS})
 # target_link_libraries(agg INTERFACE ${ARMADILLO_LIBRARIES})
 
+##
 # compiled libraries
+##
 add_library(agg src/agg.cpp)
 target_include_directories(agg PUBLIC
   ${CMAKE_CURRENT_SOURCE_DIR}/include
@@ -38,7 +40,16 @@ target_include_directories(matmult PUBLIC
 target_link_libraries(matmult PUBLIC ${ARMADILLO_LIBRARIES})
 target_compile_options(matmult PRIVATE -O3 -fopenmp-simd -mcpu=apple-m2)
 
+add_library(agg src/models.cpp)
+target_include_directories(agg PUBLIC
+  ${CMAKE_CURRENT_SOURCE_DIR}/include
+  ${ARMADILLO_INCLUDE_DIRS})
+target_link_libraries(agg PUBLIC ${ARMADILLO_LIBRARIES})
+
+##
 # other executables
+##
+
 add_executable(scratch scratch/scratch.cpp)
 target_link_libraries(scratch PRIVATE agg matmult)
 target_link_libraries(scratch PRIVATE Eigen3::Eigen)
