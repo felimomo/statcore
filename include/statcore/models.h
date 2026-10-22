@@ -6,15 +6,20 @@ namespace Models{
 
     class ModelBase {
         public:
-            explicit ModelBase(std::mt19937_64& rng, std::size_t dim);
+            explicit ModelBase(std::size_t dim);
             virtual ~ModelBase();
+            virtual double likelihood(arma::rowvec x_obs, double y_obs);
             void ingest_data(arma::mat X, arma::vec y);
             void fit(arma::mat X, arma::vec y, double beta_thresh = 0.001, std::size_t max_iter = 100);
         protected: // to be able to access from child classes
-            std::mt19937_64& rng_;
             std::size_t dim_;
             arma::mat X_;
             arma::vec y_;
+            arma::vec beta_;
+            double beta0_;
+        private:
+            virtual void irls_update_beta()=0;
+            virtual void update_pars_wts()=0;
     }
 
     class Guassian : ModelBase {
@@ -22,11 +27,11 @@ namespace Models{
             Gaussian (
                 std::size_t dim,
                 double sigma,
-                std::mt19937_64& rng
             );
             void update_pars_wts();
             void irls_update_beta();
-            double log_likelihood();
+            double log_likelihood(arma::mat X_obs, arma::vec y_obs);
+            double log_likelihood(arma::rowvec x_obs, double y_obs);
         private:
             // constant parameters
             std::size_t dim_;
@@ -47,12 +52,12 @@ namespace Models{
     class BinomLogit : ModelBase {
         public:
             BinomLogit(
-                std::mt19937_64& rng,
-                std::size_t dim,
+                std::size_t dim
             );
             void update_pars_wts();
             void irls_update_beta();
-            double log_likelihood();
+            double log_likelihood(arma::mat X_obs, arma::vec y_obs);
+            double log_likelihood(arma::rowvec x_obs, double y_obs);
         private:
             std::size_t dim_;
             arma::vec beta_;
@@ -70,7 +75,8 @@ namespace Models{
             );
             void update_pars_wts();
             void irls_update_beta();
-            double log_likelihood();
+            double log_likelihood(arma::mat X_obs, arma::vec y_obs);
+            double log_likelihood(arma::rowvec x_obs, double y_obs);
         private:
             double lambda_;
             arma::vec beta_;
