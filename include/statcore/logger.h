@@ -38,7 +38,7 @@ namespace Logging{
     class ModelLogger {
         public:
             explicit ModelLogger(const std::filesystem::path& root = ".", const std::string& name = "run");
-            void begin_fit(std::size_t max_iter);
+            void begin_fit(std::size_t max_iter, double multipl_thresh = 0.05);
             void fit_step(double dB, double log_likelihood);
             void end_fit();
             void summary(
