@@ -67,21 +67,25 @@ namespace Models{
         double dB = 1.0;
         std::size_t i = 0;
         arma::vec past_beta(dim_);
-        logger.begin_fit(max_iter);
+        if(logger){
+            logger.begin_fit(max_iter);
+        }
         while (dB > beta_thresh){
             past_beta = beta_;
             irls_update_beta();
             update_pars_wts();
             dB = arma::abs(beta_ - past_beta).max();
+            if(logger){ logger.fit_step(dB, log_likelihood(X_, y_)); }
             i++;
             if (i > max_iter){
+                if(logger){ logger.end_fit(); }
                 std::cout << "ModelBase::fit() warn:\n" 
                             << "exceeded max_iter with delta-beta = " 
                             << dB << "\n";
                 return;
             }
         }
-    
+        if (logger) { logger.end_fit(); }
     }
     arma::vec ModelBase::get_beta(){
         return beta_;
