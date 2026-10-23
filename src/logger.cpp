@@ -1,3 +1,5 @@
+#include "statcore/logging.h"
+
 #include <chrono>
 #include <filesystem>
 #include <fstream>
@@ -6,7 +8,7 @@
 
 #include <armadillo>
 
-namespace Logging{
+namespace Logging {
 
     using std::chrono::steady_clock;
 
