@@ -17,7 +17,7 @@ namespace Models{
                 arma::vec y, 
                 double beta_thresh = 0.001, 
                 std::size_t max_iter = 100,
-                Logger::ModelLogger* logger = nullptr
+                Logging::ModelLogger* logger = nullptr
             );
             arma::vec get_beta();
             double get_beta0();
