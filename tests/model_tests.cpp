@@ -1,3 +1,4 @@
+#include <cmath>
 #include <random>
 #include <stdio>
 #include <Armadillo>
