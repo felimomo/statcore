@@ -113,8 +113,8 @@ namespace Models{
         int info = 0;
         int n = static_cast<int>(dim_); // for dgesv_ signature
         std::vector<int> ipiv(dim_);
-        arma::mat A = w_ * X_.t() * X_;
-        arma::vec b = w_ * X_.t() * z_;
+        arma::mat A = X_.t() * (w_ % X_.each_col());
+        arma::vec b = X_.t() * (w_ % z_);
 
         dgesv_(&n, &nrhs, A.memptr(), &n, ipiv.data(), b.memptr(), &n, &info);
 
