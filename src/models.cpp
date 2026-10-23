@@ -68,24 +68,24 @@ namespace Models{
         std::size_t i = 0;
         arma::vec past_beta(dim_);
         if(logger){
-            logger.begin_fit(max_iter);
+            logger -> begin_fit(max_iter); // syntax for a pointer logger
         }
         while (dB > beta_thresh){
             past_beta = beta_;
             irls_update_beta();
             update_pars_wts();
             dB = arma::abs(beta_ - past_beta).max();
-            if(logger){ logger.fit_step(dB, log_likelihood(X_, y_)); }
+            if(logger){ logger -> fit_step(dB, log_likelihood(X_, y_)); }
             i++;
             if (i > max_iter){
-                if(logger){ logger.end_fit(); }
+                if(logger){ logger -> end_fit(); }
                 std::cout << "ModelBase::fit() warn:\n" 
                             << "exceeded max_iter with delta-beta = " 
                             << dB << "\n";
                 return arma::join_cols(beta_, arma::vec{beta0_});
             }
         }
-        if (logger) { logger.end_fit(); }
+        if (logger) { logger -> end_fit(); }
         return arma::join_cols(beta_, arma::vec{beta0_});
     }
     arma::vec ModelBase::get_beta(){
