@@ -55,7 +55,6 @@ namespace Models{
             double sigma_;
             arma::vec eta_;
             arma::vec z_;
-
     };
 
     class BinomLogit : public ModelBase { // public keyword to inherit public methods publically by default
