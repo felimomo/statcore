@@ -87,7 +87,15 @@ namespace Logging{
     }
 
     void ModelLogger::write() {
-        
+        // summary
+        error_metrics_.print_summary(summary_csv_);
+        // steps
+        std::ofstream stp_str;
+        stp_str.open(step_csv_);
+        stp_str << "step,dB,log_likelihood\n";
+        for (std::size_t i = 0; i < dB_.size(); i++){
+            stp_str << i << "," << dB_[i] << "," << log_lik[i] << "\n";
+        }
     }
 
 }
