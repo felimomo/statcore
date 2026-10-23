@@ -11,6 +11,8 @@
 
 namespace Logging{
 
+    using std::chrono::steady_clock;
+
     struct ErrorMetrics {
         // data
         double max_err = 0.0;
