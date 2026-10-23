@@ -30,8 +30,8 @@ void test_gauss(){
     std::cout << "beta  = " << beta_targ
               << "beta0 = " << beta0_targ << "\n";
     std::cout << "INFERRED:\n";
-    std::cout << "beta  = " << GM::get_beta()
-              << "beta0 = " << GM::get_beta0() << "\n";
+    std::cout << "beta  = " << GM.get_beta()
+              << "beta0 = " << GM.get_beta0() << "\n";
 }
 
 int main() {
