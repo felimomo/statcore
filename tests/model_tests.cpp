@@ -6,9 +6,9 @@
 
 void test_gauss(){
     // constants
-    std::size_t dim = 5; // dim of predictor space
-    std::size_t N = 10;  // n data rows
-    arma::vec beta_targ = arma::ones(5);
+    std::size_t dim = 40; // dim of predictor space
+    std::size_t N = 1000;  // n data rows
+    arma::vec beta_targ = arma::ones(dim);
     double beta0_targ = 0.0;
     double sigma = 0.05;
 
