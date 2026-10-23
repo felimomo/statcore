@@ -59,7 +59,7 @@ namespace Models{
         arma::vec y, 
         double beta_thresh, 
         std::size_t max_iter,
-        Logger::ModelLogger* logger
+        Logging::ModelLogger* logger
     ) {
         ingest_data(X, y);
         update_pars_wts(); // initialize weights and response with data
