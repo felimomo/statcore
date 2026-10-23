@@ -39,7 +39,10 @@ namespace Logging{
             void begin_fit(std::size_t max_iter);
             void fit_step(double dB, double log_likelihood);
             void end_fit();
-            void summary(std::vector<double> beta, double beta0);
+            void summary(
+                arma::vec infer_params, 
+                arma::vec targ_params
+            );
             void write();
         private:
             std::filesystem::path step_csv_;
