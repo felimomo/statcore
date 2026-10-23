@@ -26,7 +26,7 @@ namespace Models{
             virtual void update_pars_wts() = 0;
     };
 
-    class Gaussian : ModelBase {
+    class Gaussian : public ModelBase { // public keyword to inherit public methods publically by default
         public:
             Gaussian (
                 std::size_t dim,
@@ -53,7 +53,7 @@ namespace Models{
             double beta0_;
     };
 
-    class BinomLogit : ModelBase {
+    class BinomLogit : public ModelBase { // public keyword to inherit public methods publically by default
         public:
             BinomLogit(std::size_t dim);
             void update_pars_wts() override;
@@ -71,7 +71,7 @@ namespace Models{
             const double eta_max_=700.0;
     };
 
-    class PoissonLog : ModelBase {
+    class PoissonLog : public ModelBase { // public keyword to inherit public methods publically by default
         public:
             PoissonLog(std::size_t dim);
             void update_pars_wts() override;
