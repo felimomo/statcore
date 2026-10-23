@@ -22,7 +22,7 @@ void test_gauss(){
     }
 
     // logging
-    logger = Logger::ModelLogger();
+    logger = Logging::ModelLogger();
 
     // fitting
     Models::Gaussian GM(dim, sigma);
