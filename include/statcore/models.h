@@ -13,7 +13,7 @@ namespace Models{
         public:
             explicit ModelBase(std::size_t dim);
             virtual ~ModelBase() = default;
-            void ingest_data(arma::mat& X, arma::vec& y);
+            void ingest_data(const arma::mat& X, const arma::vec& y);
             arma::vec fit(
                 arma::mat& X, 
                 arma::vec& y, 
