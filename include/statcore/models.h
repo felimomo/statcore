@@ -32,8 +32,8 @@ namespace Models{
                 std::size_t dim,
                 double sigma
             );
-            void update_pars_wts() override;;
-            void irls_update_beta() override;;
+            void update_pars_wts() override;
+            void irls_update_beta() override;
             double log_likelihood(arma::mat X_obs, arma::vec y_obs) const;
             double log_likelihood(arma::rowvec x_obs, double y_obs) const;
         private:
@@ -56,8 +56,8 @@ namespace Models{
     class BinomLogit : ModelBase {
         public:
             BinomLogit(std::size_t dim);
-            void update_pars_wts() override;;
-            void irls_update_beta() override;;
+            void update_pars_wts() override;
+            void irls_update_beta() override;
             double log_likelihood(arma::mat X_obs, arma::uvec y_obs) const;
             double log_likelihood(arma::rowvec x_obs, std::size_t y_obs) const;
         private:
