@@ -3,6 +3,7 @@
 #include <armadillo>
 
 #include "statcore/models.h"
+#include "statcore/logger.h"
 
 void test_gauss(){
     // constants
@@ -20,9 +21,13 @@ void test_gauss(){
         y[i] = mu + arma::randn<double>() * sigma;
     }
 
+    // logging
+    logger = Logger::ModelLogger();
+
     // fitting
     Models::Gaussian GM(dim, sigma);
-    GM.fit(X, y);
+    GM.fit(X, y, &logger);
+    
 
     // printing
     std::cout << "dim = " << dim << ", N = " << N <<"\n";
