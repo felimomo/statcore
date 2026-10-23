@@ -1,5 +1,5 @@
-#ifndef MODELS
-#define MODELS
+#ifndef MODELS_H
+#define MODELS_H
 
 #include  <cmath>
 #include <armadillo>
@@ -12,7 +12,7 @@ namespace Models{
             explicit ModelBase(std::size_t dim);
             virtual ~ModelBase() = default;
             void ingest_data(arma::mat X, arma::vec y);
-            void fit(
+            arma::vec fit(
                 arma::mat X, 
                 arma::vec y, 
                 double beta_thresh = 0.001, 

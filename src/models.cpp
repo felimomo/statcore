@@ -54,7 +54,7 @@ namespace Models{
         X_ = X;
         y_ = y;
     }
-    void ModelBase::fit(
+    arma::vec ModelBase::fit(
         arma::mat X, 
         arma::vec y, 
         double beta_thresh, 
@@ -82,10 +82,11 @@ namespace Models{
                 std::cout << "ModelBase::fit() warn:\n" 
                             << "exceeded max_iter with delta-beta = " 
                             << dB << "\n";
-                return;
+                return arma::join_cols(beta_, arma::vec{beta0_});
             }
         }
         if (logger) { logger.end_fit(); }
+        return arma::join_cols(beta_, arma::vec{beta0_});
     }
     arma::vec ModelBase::get_beta(){
         return beta_;
