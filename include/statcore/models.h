@@ -15,8 +15,8 @@ namespace Models{
             virtual ~ModelBase() = default;
             void ingest_data(const arma::mat& X, const arma::vec& y);
             arma::vec fit(
-                arma::mat& X, 
-                arma::vec& y, 
+                const arma::mat& X, 
+                const arma::vec& y, 
                 double beta_thresh = 0.001, 
                 std::size_t max_iter = 100,
                 Logging::ModelLogger* logger = nullptr
