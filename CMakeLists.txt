@@ -47,6 +47,14 @@ target_include_directories(models PUBLIC
   ${ARMADILLO_INCLUDE_DIRS})
 target_link_libraries(models PUBLIC ${ARMADILLO_LIBRARIES})
 
+add_library(logger src/logger.cpp)
+target_include_directories(
+  logger PUBLIC
+  ${CMAKE_CURRENT_SOURCE_DIR}/include
+  ${ARMADILLO_INCLUDE_DIRS}
+)
+target_link_libraries(models PUBLIC ${ARMADILLO_LIBRARIES})
+
 add_library(statcore INTERFACE)
 target_link_libraries(statcore INTERFACE agg matmult models LAPACK::LAPACK BLAS::BLAS)
 target_compile_options(statcore INTERFACE -g)
