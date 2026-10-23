@@ -100,7 +100,7 @@ namespace Models{
     void Gaussian::update_pars_wts(){
         // eta_ = X_ * beta_ + beta0_; // unnecessary
         // tr_mu_ = eta_; // identity link
-        w_ = 1 / pow(sigma_, 2); // weights coincidentally independent of mu_ in this Gaussian case.
+        w_ = arma::ones<arma::vec>(y_.n_rows) / pow(sigma_, 2); // weights coincidentally independent of mu_ in this Gaussian case.
         z_ = y_; // response
     }
     void Gaussian::irls_update_beta(){
@@ -164,7 +164,7 @@ namespace Models{
         eta_ = X_ * beta_ + beta0_;
         eta_ = arma::clamp(eta_, -eta_max_, eta_max_);
         p_ = 1.0 / (1.0 + arma::exp(-eta_));
-        w_ = p_ * (1.0 - p_);
+        w_ = p_ % (1.0 - p_);
         z_ = eta_ + (y_ - p_) % (1.0 / (p_ % (1.0 - p_))); // response. denominator is dp / deta
     }
     void BinomLogit::irls_update_beta() {
@@ -191,7 +191,6 @@ namespace Models{
         }
         beta_ = b;
     }
-
     double BinomLogit::log_likelihood(arma::mat X_obs, arma::uvec y_obs) const {
         arma::vec p = 1.0 / (1.0 + arma::exp(- X_obs * beta_ - beta0_));
         std::size_t n = y_obs.n_rows;

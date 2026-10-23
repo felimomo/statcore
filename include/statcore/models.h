@@ -21,7 +21,7 @@ namespace Models{
             arma::vec y_;
             arma::vec beta_;
             double beta0_;
-            double w_ = 0.0;
+            arma::vec w_;
         private:
             virtual void irls_update_beta() = 0;
             virtual void update_pars_wts() = 0;
