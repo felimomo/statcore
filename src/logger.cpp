@@ -41,7 +41,7 @@ namespace Logging{
         file_stream << "max_err,mean_err,median_err,err_std,frac_wrong\n"
                     << max_err_    << "," << mean_err_ << ","
                     << median_err_ << "," << err_std_ << ","
-                    << frac_wrong << "\n";
+                    << frac_wrong  << "\n";
     }
 
     ModelLogger::ModelLogger(
