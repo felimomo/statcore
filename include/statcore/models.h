@@ -1,7 +1,7 @@
 #ifndef MODELS
 #define MODELS
 
-#include  <cstddef>
+#include  <cmath>
 #include <Armadillo>
 
 namespace Models{
@@ -13,6 +13,8 @@ namespace Models{
             virtual ~ModelBase() = default;
             void ingest_data(arma::mat X, arma::vec y);
             void fit(arma::mat X, arma::vec y, double beta_thresh, std::size_t max_iter);
+            arma::vec get_beta();
+            double get_beta0();
         protected: // to be able to access from child classes
             std::size_t dim_;
             arma::mat X_;
@@ -20,8 +22,8 @@ namespace Models{
             arma::vec beta_;
             double beta0_;
         private:
-            virtual void irls_update_beta() const = 0;
-            virtual void update_pars_wts() const = 0;
+            virtual void irls_update_beta() = 0;
+            virtual void update_pars_wts() = 0;
     };
 
     class Gaussian : ModelBase {
@@ -30,8 +32,8 @@ namespace Models{
                 std::size_t dim,
                 double sigma
             );
-            void update_pars_wts();
-            void irls_update_beta();
+            void update_pars_wts() override;;
+            void irls_update_beta() override;;
             double log_likelihood(arma::mat X_obs, arma::vec y_obs) const;
             double log_likelihood(arma::rowvec x_obs, double y_obs) const;
         private:
@@ -56,8 +58,8 @@ namespace Models{
             BinomLogit(
                 std::size_t dim
             );
-            void update_pars_wts();
-            void irls_update_beta();
+            void update_pars_wts() override;;
+            void irls_update_beta() override;;
             double log_likelihood(arma::mat X_obs, arma::vec y_obs) const;
             double log_likelihood(arma::rowvec x_obs, double y_obs) const;
         private:
@@ -75,8 +77,8 @@ namespace Models{
                 std::mt19937_64& rng,
                 std::size_t dim
             );
-            void update_pars_wts();
-            void irls_update_beta();
+            void update_pars_wts() override;;
+            void irls_update_beta() override;
             double log_likelihood(arma::mat X_obs, arma::vec y_obs) const;
             double log_likelihood(arma::rowvec x_obs, double y_obs) const;
         private:
