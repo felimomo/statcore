@@ -27,6 +27,7 @@ namespace Models{
     using std::exp;
     using std::numbers::pi; 
 
+    // utility
     inline double binom_coeff(std::size_t N, std::size_t m) {
         std::size_t n = std::max(m, N-m);
         std::size_t n_rest = N - n;
@@ -37,6 +38,7 @@ namespace Models{
         return result;
     }
 
+    // ModelBase implementation
     ModelBase::ModelBase(std::size_t dim) dim_(dim) {
         // initialize random normal:
         beta_ = arma::randn(dim_);
@@ -75,6 +77,7 @@ namespace Models{
                 return;
             }
         }
+    
     }
     arma::vec ModelBase::get_beta(){
         return beta_;
@@ -83,204 +86,181 @@ namespace Models{
         return beta0_;
     }
 
+    // Gaussian implementation
+    Gaussian::Gaussian(
+        std::size_t dim,
+        double sigma
+    ): ModelBase(dim), sigma_(sigma) {
+        // initialize random normal:
+        beta_ = arma::randn(dim_);
+        beta0_ = arma::randn<double>();
+    }
+    Gaussian::Gaussian(
+        std::size_t dim,
+        double sigma
+    ): ModelBase(dim), sigma_(sigma) {
+        // initialize random normal:
+        beta_ = arma::randn(dim_);
+        beta0_ = arma::randn<double>();
+    }
+    void Gaussian::update_pars_wts() override {
+        // eta_ = X_ * beta_ + beta0_; // unnecessary
+        // tr_mu_ = eta_; // identity link
+        w_ = 1 / pow(sigma_, 2) // weights coincidentally independent of mu_ in this Gaussian case.
+        z_ = y_; // response
+    }
+    void Gaussian::irls_update_beta() override {
+        // LAPACK call to solve:
+        //      X.T W X beta = X.T W z
+        //      
+        //      notice that this equation happens in dim_ -> dim_ space.
+        // Solve in-place (LAPACK style) on beta_.
+        nrhs = 1;
+        int info = 0;
+        std::vector<int> ipiv(dim_);
+        A = w_ * X_.t() * X_;
+        b = w_ * X.t() * z_;
 
-    class Gaussian : ModelBase {
-        public:
-            Gaussian (
-                std::size_t dim,
-                double sigma
-            ): ModelBase(dim), sigma_(sigma) {
-                // initialize random normal:
-                beta_ = arma::randn(dim_);
-                beta0_ = arma::randn<double>();
-            }
+        dgesv_(&dim_, &nrhs, A.begin(), &dim_, ipiv.data(), b.begin(), &dim_, &info);
 
-            void update_pars_wts() override {
-                // eta_ = X_ * beta_ + beta0_; // unnecessary
-                // tr_mu_ = eta_; // identity link
-                w_ = 1 / pow(sigma_, 2) // weights coincidentally independent of mu_ in this Gaussian case.
-                z_ = y_; // response
-            }
+        if (info > 0) {
+            cout << "dgesv_ info = " << info;
+            throw std::runtime_error(
+                "Gaussian::irls_update_beta():\n Matrix at dgesv_ solution step singular"
+            );
+        }
+        if (info < 0) {
+            cout << "dgesv_ info = " << info;
+            throw std::runtime_error(
+                "Illegal argument."
+            );
+        }
+        beta_ = b;
+    }
+    double Gaussian::log_likelihood(arma::mat X_obs, arma::vec y_obs) {
+        return (
+            arma::accu(
+                arma::square(y_obs - X_obs * beta_ - beta0_) 
+            ) / (2 * pow(sigma_, 2))
+            - 0.5 * y_obs.n_cols * log(2 * pi * pow(sigma_, 2))
+        );
+    }
+    double Gaussian::log_likelihood(arma::rowvec x_obs, double y_obs) {
+        return (
+            arma::square(y_obs - x_obs * beta_ - beta0_)  / (2 * pow(sigma_, 2))
+            - 0.5 * y_obs.n_cols * log(2 * pi * pow(sigma_, 2))
+        );
+    }
 
-            void irls_update_beta() override {
-                // LAPACK call to solve:
-                //      X.T W X beta = X.T W z
-                //      
-                //      notice that this equation happens in dim_ -> dim_ space.
-                // Solve in-place (LAPACK style) on beta_.
-                nrhs = 1;
-                int info = 0;
-                std::vector<int> ipiv(dim_);
-                A = w_ * X_.t() * X_;
-                b = w_ * X.t() * z_;
+    // BinomLogit implementation
+    BinomLogit::BinomLogit(
+        std::size_t dim
+    ) : ModelBase(dim) {
+        //random init
+        beta_ = arma::randn(dim_);
+        beta0_ = arma::randn<double>();
+    }
+    void BinomLogit::update_pars_wts() override {
+        eta_ = X_ * beta_ + beta0_;
+        eta_ = arma::clamp(eta_, -eta_max_, eta_max_);
+        p_ = 1.0 / (1.0 + arma::exp(-eta_));
+        w_ = p_ * (1.0 - p_);
+        z_ = eta_ + (y_ - p_) % (1.0 / (p_ % (1.0 - p_))); // response. denominator is dp / deta
+    }
+    void BinomLogit::irls_update_beta() override {
+        nrhs = 1;
+        int info = 0;
+        std::vector<int> ipiv(dim_);
+        A = X_.t() * (w_ % X_.each_col());
+        b = X.t() * (w_ % z_);
 
-                dgesv_(&dim_, &nrhs, A.begin(), &dim_, ipiv.data(), b.begin(), &dim_, &info);
+        dgesv_(&dim_, &nrhs, A.begin(), &dim_, ipiv.data(), b.begin(), &dim_, &info);
 
-                if (info > 0) {
-                    cout << "dgesv_ info = " << info;
-                    throw std::runtime_error(
-                        "Gaussian::irls_update_beta():\n Matrix at dgesv_ solution step singular"
-                    );
-                }
-                if (info < 0) {
-                    cout << "dgesv_ info = " << info;
-                    throw std::runtime_error(
-                        "Illegal argument."
-                    );
-                }
-                beta_ = b;
-            }
+        if (info > 0) {
+            cout << "dgesv_ info = " << info;
+            throw std::runtime_error(
+                "Gaussian::irls_update_beta():\n Matrix at dgesv_ solution step singular"
+            );
+        }
+        if (info < 0) {
+            cout << "dgesv_ info = " << info;
+            throw std::runtime_error(
+                "Illegal argument."
+            );
+        }
+        beta_ = b;
+    }
 
-            double log_likelihood(arma::mat X_obs, arma::vec y_obs) {
-                return (
-                    arma::accu(
-                        arma::square(y_obs - X_obs * beta_ - beta0_) 
-                    ) / (2 * pow(sigma_, 2))
-                    - 0.5 * y_obs.n_cols * log(2 * pi * pow(sigma_, 2))
-                );
-            }
-            double log_likelihood(arma::rowvec x_obs, double y_obs) {
-                return (
-                    arma::square(y_obs - x_obs * beta_ - beta0_)  / (2 * pow(sigma_, 2))
-                    - 0.5 * y_obs.n_cols * log(2 * pi * pow(sigma_, 2))
-                );
-            }
+    double BinomLogit::log_likelihood(arma::mat X_obs, arma::vec y_obs) {
+        arma::vec p = 1.0 / (1.0 + arma::exp(- X_obs * beta_ - beta0_));
+        std::size_t n = y.n_rows;
+        double log_binom = (
+            std::lgamma(n + 1) 
+            - std::lgamma(arma::accu(y_obs) + 1)
+            - std::lgamma(n - arma::accu(y_obs) + 1)
+        );
+        return arma::accu(
+            y_obs % arma::log(p) - (1 - y_obs) % arma::log(1 - p)
+        ) + log_binom;
+    }
+    double BinomLogit::log_likelihood(arma::rowvec x_obs, double y_obs) {
+        double log_binom = std::lgamma(1 + 1) - std::lgamma(y_obs + 1) - std::lgamma(1 - y_obs + 1);
+        double p = 1.0 / (1.0 + exp(- x_obs * beta_ - beta0_));
+        return y_obs * log(p) - (1 - y_obs) * log(1 - p);
+    }
 
-        private:
-            // constant parameters
-            std::size_t dim_;
-            double sigma_;
+    // PoissonLog implementation
+    PoissonLog::PoissonLog(std::size_t dim) : ModelBase(dim) {
+        //random init
+        beta_ = arma::randn(dim_);
+        beta0_ = arma::randn<double>();
+    }
 
-            // training
-            arma::mat X_;
-            arma::vec y_;
-            arma::vec eta_;
-            double w_;
-            arma::vec z_;
+    void PoissonLog::update_pars_wts() override {
+        eta_ = X_ * beta_ + beta0_;
+        eta_ = arma::clamp(eta_, -eta_max_, eta_max_);
+        lambda_ = arma::exp(eta_);
+        w_ = lambda_; // dlamda / deta = lambda. => w = lambda^2 / lambda <-- variance
+        z_ = eta_ + (y_ - lambda_) % (1.0 / lambda_); // response, denominator is dlambda / deta
+    }
+    void PoissonLog::irls_update_beta() override {
+        nrhs = 1;
+        int info = 0;
+        std::vector<int> ipiv(dim_);
+        A = X_.t() * (w_ % X_.each_col());
+        b = X.t() * (w_ % z_);
 
-            // inference
-            arma::vec beta_;
-            double beta0_;
-    };
+        dgesv_(&dim_, &nrhs, A.begin(), &dim_, ipiv.data(), b.begin(), &dim_, &info);
 
-    class BinomLogit : ModelBase {
-        public:
-            BinomLogit(
-                std::size_t dim
-            ) : ModelBase(dim) {
-                //random init
-                beta_ = arma::randn(dim_);
-                beta0_ = arma::randn<double>();
-            }
-
-            void update_pars_wts() override {
-                eta_ = X_ * beta_ + beta0_;
-                eta_ = arma::clamp(eta_, -eta_max_, eta_max_);
-                p_ = 1.0 / (1.0 + arma::exp(-eta_));
-                w_ = p_ * (1.0 - p_);
-                z_ = eta_ + (y_ - p_) % (1.0 / (p_ % (1.0 - p_))); // response. denominator is dp / deta
-            }
-            void irls_update_beta() override {
-                nrhs = 1;
-                int info = 0;
-                std::vector<int> ipiv(dim_);
-                A = X_.t() * (w_ % X_.each_col());
-                b = X.t() * (w_ % z_);
-
-                dgesv_(&dim_, &nrhs, A.begin(), &dim_, ipiv.data(), b.begin(), &dim_, &info);
-
-                if (info > 0) {
-                    cout << "dgesv_ info = " << info;
-                    throw std::runtime_error(
-                        "Gaussian::irls_update_beta():\n Matrix at dgesv_ solution step singular"
-                    );
-                }
-                if (info < 0) {
-                    cout << "dgesv_ info = " << info;
-                    throw std::runtime_error(
-                        "Illegal argument."
-                    );
-                }
-                beta_ = b;
-            }
-
-            double log_likelihood(arma::mat X_obs, arma::vec y_obs) {
-                arma::vec p = 1.0 / (1.0 + arma::exp(- X_obs * beta_ - beta0_));
-                std::size_t n = y.n_rows;
-                double log_binom = (
-                    std::lgamma(n + 1) 
-                    - std::lgamma(arma::accu(y_obs) + 1)
-                    - std::lgamma(n - arma::accu(y_obs) + 1)
-                );
-                return arma::accu(
-                    y_obs % arma::log(p) - (1 - y_obs) % arma::log(1 - p)
-                ) + log_binom;
-            }
-            double log_likelihood(arma::rowvec x_obs, double y_obs) {
-                double log_binom = std::lgamma(1 + 1) - std::lgamma(y_obs + 1) - std::lgamma(1 - y_obs + 1);
-                double p = 1.0 / (1.0 + exp(- x_obs * beta_ - beta0_));
-                return y_obs * log(p) - (1 - y_obs) * log(1 - p);
-            }
-
-        private:
-            std::size_t dim_;
-            arma::vec beta_;
-            double beta0_;
-            arma::vec p_;
-            arma::vec w_;
-            const double eta_max_ = 700.0;
-    };
-
-    class PoissonLog : ModelBase {
-        public:
-            PoissonLog(std::size_t dim) : ModelBase(dim) {
-                //random init
-                beta_ = arma::randn(dim_);
-                beta0_ = arma::randn<double>();
-            }
-
-            void update_pars_wts() override {
-                eta_ = X_ * beta_ + beta0_;
-                eta_ = arma::clamp(eta_, -eta_max_, eta_max_);
-                lambda_ = arma::exp(eta_);
-                w_ = lambda_; // dlamda / deta = lambda. => w = lambda^2 / lambda <-- variance
-                z_ = eta_ + (y_ - lambda_) % (1.0 / lambda_); // response, denominator is dlambda / deta
-            }
-            void irls_update_beta() override {
-                nrhs = 1;
-                int info = 0;
-                std::vector<int> ipiv(dim_);
-                A = X_.t() * (w_ % X_.each_col());
-                b = X.t() * (w_ % z_);
-
-                dgesv_(&dim_, &nrhs, A.begin(), &dim_, ipiv.data(), b.begin(), &dim_, &info);
-
-                if (info > 0) {
-                    cout << "dgesv_ info = " << info;
-                    throw std::runtime_error(
-                        "Gaussian::irls_update_beta():\n Matrix at dgesv_ solution step singular"
-                    );
-                }
-                if (info < 0) {
-                    cout << "dgesv_ info = " << info;
-                    throw std::runtime_error(
-                        "Illegal argument."
-                    );
-                }
-                beta_ = b;
-            }
-            
-            double log_likelihood(arma::rowvec x_obs, std::size_t y_obs) {
-                double lambda = exp(x_obs * beta_ + beta0_);
-                return y_obs * log(lambda) - lambda - std::lgamma(y_obs+1);
-            }
-            
-        private:
-            double lambda_;
-            arma::vec beta_;
-            double beta0_;
-            arma::vec w_;
-            const double eta_max_ = 700.0;
-    };
-
+        if (info > 0) {
+            cout << "dgesv_ info = " << info;
+            throw std::runtime_error(
+                "Gaussian::irls_update_beta():\n Matrix at dgesv_ solution step singular"
+            );
+        }
+        if (info < 0) {
+            cout << "dgesv_ info = " << info;
+            throw std::runtime_error(
+                "Illegal argument."
+            );
+        }
+        beta_ = b;
+    }
+    double PoissonLog::log_likelihood(arma::rowvec x_obs, std::size_t y_obs) {
+        double lambda = exp(x_obs * beta_ + beta0_);
+        // avoid log(exp( <loglambda> )) and simply use <loglambda>.
+        return y_obs * (x_obs * beta_ + beta0_) - lambda - std::lgamma(y_obs+1);
+    }
+    double PoissonLog::log_likelihood(arma::mat X_obs, arma::uvec y_obs) {
+        double lambda = arma::exp(X_obs * beta_ + beta0_);
+        // avoid log(exp( <loglambda> )) and simply use <loglambda>.
+        return (
+            arma::accu(
+                y_obs % (X_obs * beta_ + beta0_) - lambda
+            ) 
+            - y_obs.transform(
+                [] double val {return std::lgamma(val + 1); }
+            )
+        );
+    }
 }
