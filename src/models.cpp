@@ -147,17 +147,17 @@ namespace Models{
             - 0.5 * y_obs.n_rows * log(2 * pi * pow(sigma_, 2))
         );
     }
-    double Gaussian::log_likelihood(arma::rowvec x_obs, double y_obs) const {
-        return (
-            pow(
-                y_obs - arma::as_scalar(x_obs * beta_) - beta0_, 
-                2
-            ) / (
-                2 * pow(sigma_, 2)
-            )
-            - 0.5 * 1 * log(2 * pi * pow(sigma_, 2))
-        );
-    }
+    // double Gaussian::log_likelihood(arma::rowvec x_obs, double y_obs) const {
+    //     return (
+    //         pow(
+    //             y_obs - arma::as_scalar(x_obs * beta_) - beta0_, 
+    //             2
+    //         ) / (
+    //             2 * pow(sigma_, 2)
+    //         )
+    //         - 0.5 * 1 * log(2 * pi * pow(sigma_, 2))
+    //     );
+    // }
 
     // BinomLogit implementation
     BinomLogit::BinomLogit(
@@ -198,7 +198,7 @@ namespace Models{
         }
         beta_ = b;
     }
-    double BinomLogit::log_likelihood(arma::mat X_obs, arma::uvec y_obs) const {
+    double BinomLogit::log_likelihood(arma::mat X_obs, arma::vec y_obs) const {
         arma::vec p = 1.0 / (1.0 + arma::exp(- X_obs * beta_ - beta0_));
         std::size_t n = y_obs.n_rows;
         double log_binom = (
@@ -210,13 +210,13 @@ namespace Models{
             y_obs % arma::log(p) - (1 - y_obs) % arma::log(1 - p)
         ) + log_binom;
     }
-    double BinomLogit::log_likelihood(arma::rowvec x_obs, std::size_t y_obs) const {
-        double log_binom = std::lgamma(1 + 1) - std::lgamma(y_obs + 1) - std::lgamma(1 - y_obs + 1);
-        double p = 1.0 / (1.0 + exp(
-            - arma::as_scalar(x_obs * beta_) - beta0_
-        ));
-        return y_obs * log(p) - (1 - y_obs) * log(1 - p);
-    }
+    // double BinomLogit::log_likelihood(arma::rowvec x_obs, std::size_t y_obs) const {
+    //     double log_binom = std::lgamma(1 + 1) - std::lgamma(y_obs + 1) - std::lgamma(1 - y_obs + 1);
+    //     double p = 1.0 / (1.0 + exp(
+    //         - arma::as_scalar(x_obs * beta_) - beta0_
+    //     ));
+    //     return y_obs * log(p) - (1 - y_obs) * log(1 - p);
+    // }
 
     // PoissonLog implementation
     PoissonLog::PoissonLog(std::size_t dim) : ModelBase(dim) {
@@ -256,17 +256,17 @@ namespace Models{
         }
         beta_ = b;
     }
-    double PoissonLog::log_likelihood(arma::rowvec x_obs, std::size_t y_obs) const {
-        double lambda = exp(arma::as_scalar(x_obs * beta_) + beta0_);
-        // avoid log(exp( <loglambda> )) and simply use <loglambda>.
-        return (
-            y_obs * (
-                arma::as_scalar(x_obs * beta_) + beta0_
-            ) 
-            - lambda - std::lgamma(y_obs+1)
-        );
-    }
-    double PoissonLog::log_likelihood(arma::mat X_obs, arma::uvec y_obs) const {
+    // double PoissonLog::log_likelihood(arma::rowvec x_obs, std::size_t y_obs) const {
+    //     double lambda = exp(arma::as_scalar(x_obs * beta_) + beta0_);
+    //     // avoid log(exp( <loglambda> )) and simply use <loglambda>.
+    //     return (
+    //         y_obs * (
+    //             arma::as_scalar(x_obs * beta_) + beta0_
+    //         ) 
+    //         - lambda - std::lgamma(y_obs+1)
+    //     );
+    // }
+    double PoissonLog::log_likelihood(arma::mat X_obs, arma::vec y_obs) const {
         arma::vec lambda = arma::exp(X_obs * beta_ + beta0_);
         // avoid log(exp( <loglambda> )) and simply use <loglambda>.
         return (
