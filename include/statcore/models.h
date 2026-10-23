@@ -2,7 +2,7 @@
 #define MODELS
 
 #include  <cmath>
-#include <Armadillo>
+#include <armadillo>
 
 namespace Models{
     inline double binom_coeff(std::size_t N, std::size_t m);
@@ -24,6 +24,7 @@ namespace Models{
         private:
             virtual void irls_update_beta() = 0;
             virtual void update_pars_wts() = 0;
+            double w_ = 0.0;
     };
 
     class Gaussian : public ModelBase { // public keyword to inherit public methods publically by default
