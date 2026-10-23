@@ -39,7 +39,7 @@ namespace Models{
     }
 
     // ModelBase implementation
-    ModelBase::ModelBase(std::size_t dim) dim_(dim) {
+    ModelBase::ModelBase(std::size_t dim): dim_(dim) {
         // initialize random normal:
         beta_ = arma::randn(dim_);
         beta0_ = arma::randn<double>();
