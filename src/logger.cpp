@@ -69,7 +69,7 @@ namespace Logging{
 
     void ModelLogger::summary(
         arma::vec infer_params, 
-        arma::vec targ_params,
+        arma::vec targ_params
     ){
         error_metrics_ = ErrorMetrics(
             arma::vec infer_params, 
