@@ -30,6 +30,7 @@ namespace Logging{
             double multipl_thresh = 0.05, 
             double beta_thresh = 0.0001
         );
+        void print_summary(const std::filesystem::path& file);
     };
 
     class ModelLogger {
