@@ -37,13 +37,13 @@ namespace Logging {
         );
         frac_wrong = static_cast<double>(N_wrong) / healthy_idx.size(); 
     }
-    ErrorMetrics::print_summary(const std::filesystem::path& file) {
+    void ErrorMetrics::print_summary(const std::filesystem::path& file) {
         std::ofstream file_stream;
         file_stream.open(file);
         file_stream << "max_err,mean_err,median_err,err_std,frac_wrong\n"
-                    << max_err_    << "," << mean_err_ << ","
-                    << median_err_ << "," << err_std_ << ","
-                    << frac_wrong  << "\n";
+                    << max_err    << "," << mean_err << ","
+                    << median_err << "," << err_std  << ","
+                    << frac_wrong << "\n";
     }
 
     ModelLogger::ModelLogger(
