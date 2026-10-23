@@ -13,17 +13,17 @@ namespace Models{
         public:
             explicit ModelBase(std::size_t dim);
             virtual ~ModelBase() = default;
-            void ingest_data(arma::mat X, arma::vec y);
+            void ingest_data(arma::mat& X, arma::vec& y);
             arma::vec fit(
-                arma::mat X, 
-                arma::vec y, 
+                arma::mat& X, 
+                arma::vec& y, 
                 double beta_thresh = 0.001, 
                 std::size_t max_iter = 100,
                 Logging::ModelLogger* logger = nullptr
             );
             arma::vec get_beta();
             double get_beta0();
-            virtual double log_likelihood(arma::mat X_obs, arma::vec y_obs) const = 0;
+            virtual double log_likelihood(const arma::mat& X_obs, const arma::vec& y_obs) const = 0;
         protected: // to be able to access from child classes
             std::size_t dim_;
             arma::mat X_;
@@ -44,7 +44,7 @@ namespace Models{
             );
             void update_pars_wts() override;
             void irls_update_beta() override;
-            double log_likelihood(arma::mat X_obs, arma::vec y_obs) const override;
+            double log_likelihood(const arma::mat& X_obs, const arma::vec& y_obs) const override;
         private:
             double sigma_;
             arma::vec eta_;
@@ -56,7 +56,7 @@ namespace Models{
             BinomLogit(std::size_t dim);
             void update_pars_wts() override;
             void irls_update_beta() override;
-            double log_likelihood(arma::mat X_obs, arma::vec y_obs) const override;
+            double log_likelihood(const arma::mat& X_obs, const arma::vec& y_obs) const override;
         private:
             arma::vec eta_;
             arma::vec p_;
@@ -69,7 +69,7 @@ namespace Models{
             PoissonLog(std::size_t dim);
             void update_pars_wts() override;
             void irls_update_beta() override;
-            double log_likelihood(arma::mat X_obs, arma::vec y_obs) const override;
+            double log_likelihood(const arma::mat& X_obs, const arma::vec& y_obs) const override;
         private:
             arma::vec lambda_;
             arma::vec eta_;

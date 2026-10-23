@@ -44,7 +44,7 @@ namespace Models{
         beta_ = arma::randn(dim_);
         beta0_ = arma::randn<double>();
     }
-    void ModelBase::ingest_data(arma::mat X, arma::vec y) {
+    void ModelBase::ingest_data(const arma::mat& X, const arma::vec& y) {
         if (y.n_rows != X.n_rows) {
             throw std::invalid_argument("ModelBase::ingest_data: Numer of rows in X and y do not match.");
         }
@@ -55,8 +55,8 @@ namespace Models{
         y_ = y;
     }
     arma::vec ModelBase::fit(
-        arma::mat X, 
-        arma::vec y, 
+        const arma::mat& X, 
+        const arma::vec& y, 
         double beta_thresh, 
         std::size_t max_iter,
         Logging::ModelLogger* logger
@@ -139,7 +139,10 @@ namespace Models{
         }
         beta_ = b;
     }
-    double Gaussian::log_likelihood(arma::mat X_obs, arma::vec y_obs) const {
+    double Gaussian::log_likelihood(
+        const arma::mat& X_obs, 
+        const arma::vec& y_obs
+    ) const {
         return (
             arma::accu(
                 arma::square(y_obs - X_obs * beta_ - beta0_) 
@@ -198,7 +201,10 @@ namespace Models{
         }
         beta_ = b;
     }
-    double BinomLogit::log_likelihood(arma::mat X_obs, arma::vec y_obs) const {
+    double BinomLogit::log_likelihood(
+        const arma::mat& X_obs, 
+        const arma::vec& y_obs
+    ) const {
         arma::vec p = 1.0 / (1.0 + arma::exp(- X_obs * beta_ - beta0_));
         std::size_t n = y_obs.n_rows;
         double log_binom = (
@@ -266,7 +272,10 @@ namespace Models{
     //         - lambda - std::lgamma(y_obs+1)
     //     );
     // }
-    double PoissonLog::log_likelihood(arma::mat X_obs, arma::vec y_obs) const {
+    double PoissonLog::log_likelihood(
+        const arma::mat& X_obs, 
+        const arma::vec& y_obs
+    ) const {
         arma::vec lambda = arma::exp(X_obs * beta_ + beta0_);
         // avoid log(exp( <loglambda> )) and simply use <loglambda>.
         return (

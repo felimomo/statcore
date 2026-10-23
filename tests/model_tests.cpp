@@ -26,7 +26,7 @@ void test_gauss(){
 
     // fitting
     Models::Gaussian GM(dim, sigma);
-    infer_params = GM.fit(X, y, &logger);
+    arma::vec infer_params = GM.fit(X, y, &logger);
 
     // log writing
     logger.summary();
