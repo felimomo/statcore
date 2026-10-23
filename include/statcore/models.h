@@ -12,7 +12,7 @@ namespace Models{
             explicit ModelBase(std::size_t dim);
             virtual ~ModelBase() = default;
             void ingest_data(arma::mat X, arma::vec y);
-            void fit(arma::mat X, arma::vec y, double beta_thresh, std::size_t max_iter);
+            void fit(arma::mat X, arma::vec y, double beta_thresh = 0.001, std::size_t max_iter = 100);
             arma::vec get_beta();
             double get_beta0();
         protected: // to be able to access from child classes

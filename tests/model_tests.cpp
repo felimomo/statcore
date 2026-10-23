@@ -16,13 +16,13 @@ void test_gauss(){
     arma::mat X(N, dim, arma::fill::randn);
     arma::vec y(dim);
     for (std::size_t i = 0; i<dim; i++) {
-        mu = X.row(i) * beta_targ + beta0_targ;
+        double mu = arma::as_scalar(X.row(i) * beta_targ) + beta0_targ;
         y[i] = mu + arma::randn<double>() * sigma;
     }
 
     // fitting
-    Models::Gaussian GM(dim);
-    GM::fit(X, y);
+    Models::Gaussian GM(dim, sigma);
+    GM.fit(X, y);
 
     // printing
     std::cout << "dim = " << dim << ", N = " << N <<"\n";

@@ -57,8 +57,8 @@ namespace Models{
     void ModelBase::fit(
         arma::mat X, 
         arma::vec y, 
-        double beta_thresh = 0.001, 
-        std::size_t max_iter = 100
+        double beta_thresh, 
+        std::size_t max_iter
     ) {
         ingest_data(X, y);
         double dB = 1.0;
