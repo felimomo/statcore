@@ -21,10 +21,10 @@ namespace Models{
             arma::vec y_;
             arma::vec beta_;
             double beta0_;
+            double w_ = 0.0;
         private:
             virtual void irls_update_beta() = 0;
             virtual void update_pars_wts() = 0;
-            double w_ = 0.0;
     };
 
     class Gaussian : public ModelBase { // public keyword to inherit public methods publically by default
@@ -38,20 +38,10 @@ namespace Models{
             double log_likelihood(arma::mat X_obs, arma::vec y_obs) const;
             double log_likelihood(arma::rowvec x_obs, double y_obs) const;
         private:
-            // constant parameters
-            std::size_t dim_;
             double sigma_;
-
-            // training
-            arma::mat X_;
-            arma::vec y_;
             arma::vec eta_;
-            double w_;
             arma::vec z_;
 
-            // inference
-            arma::vec beta_;
-            double beta0_;
     };
 
     class BinomLogit : public ModelBase { // public keyword to inherit public methods publically by default
@@ -62,12 +52,8 @@ namespace Models{
             double log_likelihood(arma::mat X_obs, arma::uvec y_obs) const;
             double log_likelihood(arma::rowvec x_obs, std::size_t y_obs) const;
         private:
-            std::size_t dim_;
-            arma::vec beta_;
             arma::vec eta_;
-            double beta0_;
             arma::vec p_;
-            arma::vec w_;
             arma::vec z_;
             const double eta_max_=700.0;
     };
@@ -81,10 +67,7 @@ namespace Models{
             double log_likelihood(arma::rowvec x_obs, std::size_t y_obs) const;
         private:
             arma::vec lambda_;
-            arma::vec beta_;
             arma::vec eta_;
-            double beta0_;
-            arma::vec w_;
             arma::vec z_;
             const double eta_max_=700.0;
     };
