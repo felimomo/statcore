@@ -1,3 +1,6 @@
+#ifndef LOGGER_H
+#define LOGGER_H
+
 #include <chrono>
 #include <filesystem>
 #include <fstream>
@@ -48,3 +51,5 @@ namespace Logging{
             double multipl_thresh_;
     };
 }
+
+#endif
