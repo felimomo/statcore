@@ -278,13 +278,15 @@ namespace Models{
     ) const {
         arma::vec lambda = arma::exp(X_obs * beta_ + beta0_);
         // avoid log(exp( <loglambda> )) and simply use <loglambda>.
+        double log_fact = 0.0;
+        for (arma::uword i = 0; i < y_obs.n_elem; ++i) {
+            log_fact += std::lgamma(y_obs(i) + 1.0);
+        }
         return (
             arma::accu(
                 y_obs % (X_obs * beta_ + beta0_) - lambda
             ) 
-            - arma::accu(y_obs.transform(
-                [] (double val) -> double {return std::lgamma(val + 1); }
-            ))
+            - log_fact
         );
     }
 }
