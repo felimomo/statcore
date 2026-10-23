@@ -12,7 +12,13 @@ namespace Models{
             explicit ModelBase(std::size_t dim);
             virtual ~ModelBase() = default;
             void ingest_data(arma::mat X, arma::vec y);
-            void fit(arma::mat X, arma::vec y, double beta_thresh = 0.001, std::size_t max_iter = 100);
+            void fit(
+                arma::mat X, 
+                arma::vec y, 
+                double beta_thresh = 0.001, 
+                std::size_t max_iter = 100,
+                Logger::ModelLogger* logger = nullptr
+            );
             arma::vec get_beta();
             double get_beta0();
         protected: // to be able to access from child classes
@@ -25,6 +31,8 @@ namespace Models{
         private:
             virtual void irls_update_beta() = 0;
             virtual void update_pars_wts() = 0;
+            virtual double log_likelihood(arma::mat X_obs, arma::vec y_obs) const = 0;
+            virtual double log_likelihood(arma::rowvec x_obs, double y_obs) const = 0;
     };
 
     class Gaussian : public ModelBase { // public keyword to inherit public methods publically by default
@@ -35,8 +43,8 @@ namespace Models{
             );
             void update_pars_wts() override;
             void irls_update_beta() override;
-            double log_likelihood(arma::mat X_obs, arma::vec y_obs) const;
-            double log_likelihood(arma::rowvec x_obs, double y_obs) const;
+            double log_likelihood(arma::mat X_obs, arma::vec y_obs) const override;
+            double log_likelihood(arma::rowvec x_obs, double y_obs) const override;
         private:
             double sigma_;
             arma::vec eta_;
@@ -49,8 +57,8 @@ namespace Models{
             BinomLogit(std::size_t dim);
             void update_pars_wts() override;
             void irls_update_beta() override;
-            double log_likelihood(arma::mat X_obs, arma::uvec y_obs) const;
-            double log_likelihood(arma::rowvec x_obs, std::size_t y_obs) const;
+            double log_likelihood(arma::mat X_obs, arma::uvec y_obs) const override;
+            double log_likelihood(arma::rowvec x_obs, std::size_t y_obs) const override;
         private:
             arma::vec eta_;
             arma::vec p_;
@@ -63,8 +71,8 @@ namespace Models{
             PoissonLog(std::size_t dim);
             void update_pars_wts() override;
             void irls_update_beta() override;
-            double log_likelihood(arma::mat X_obs, arma::uvec y_obs) const;
-            double log_likelihood(arma::rowvec x_obs, std::size_t y_obs) const;
+            double log_likelihood(arma::mat X_obs, arma::uvec y_obs) const override;
+            double log_likelihood(arma::rowvec x_obs, std::size_t y_obs) const override;
         private:
             arma::vec lambda_;
             arma::vec eta_;

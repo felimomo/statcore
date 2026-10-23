@@ -58,7 +58,8 @@ namespace Models{
         arma::mat X, 
         arma::vec y, 
         double beta_thresh, 
-        std::size_t max_iter
+        std::size_t max_iter,
+        Logger::ModelLogger* logger
     ) {
         ingest_data(X, y);
         update_pars_wts(); // initialize weights and response with data
@@ -66,6 +67,7 @@ namespace Models{
         double dB = 1.0;
         std::size_t i = 0;
         arma::vec past_beta(dim_);
+        logger.begin_fit(max_iter);
         while (dB > beta_thresh){
             past_beta = beta_;
             irls_update_beta();
@@ -132,7 +134,7 @@ namespace Models{
         }
         beta_ = b;
     }
-    double Gaussian::log_likelihood(arma::mat X_obs, arma::vec y_obs) const {
+    double Gaussian::log_likelihood(arma::mat X_obs, arma::vec y_obs) const override {
         return (
             arma::accu(
                 arma::square(y_obs - X_obs * beta_ - beta0_) 
@@ -140,7 +142,7 @@ namespace Models{
             - 0.5 * y_obs.n_rows * log(2 * pi * pow(sigma_, 2))
         );
     }
-    double Gaussian::log_likelihood(arma::rowvec x_obs, double y_obs) const {
+    double Gaussian::log_likelihood(arma::rowvec x_obs, double y_obs) const override {
         return (
             pow(
                 y_obs - arma::as_scalar(x_obs * beta_) - beta0_, 
@@ -191,7 +193,7 @@ namespace Models{
         }
         beta_ = b;
     }
-    double BinomLogit::log_likelihood(arma::mat X_obs, arma::uvec y_obs) const {
+    double BinomLogit::log_likelihood(arma::mat X_obs, arma::uvec y_obs) const override {
         arma::vec p = 1.0 / (1.0 + arma::exp(- X_obs * beta_ - beta0_));
         std::size_t n = y_obs.n_rows;
         double log_binom = (
@@ -203,7 +205,7 @@ namespace Models{
             y_obs % arma::log(p) - (1 - y_obs) % arma::log(1 - p)
         ) + log_binom;
     }
-    double BinomLogit::log_likelihood(arma::rowvec x_obs, std::size_t y_obs) const {
+    double BinomLogit::log_likelihood(arma::rowvec x_obs, std::size_t y_obs) const override {
         double log_binom = std::lgamma(1 + 1) - std::lgamma(y_obs + 1) - std::lgamma(1 - y_obs + 1);
         double p = 1.0 / (1.0 + exp(
             - arma::as_scalar(x_obs * beta_) - beta0_
@@ -249,7 +251,7 @@ namespace Models{
         }
         beta_ = b;
     }
-    double PoissonLog::log_likelihood(arma::rowvec x_obs, std::size_t y_obs) const {
+    double PoissonLog::log_likelihood(arma::rowvec x_obs, std::size_t y_obs) const override {
         double lambda = exp(arma::as_scalar(x_obs * beta_) + beta0_);
         // avoid log(exp( <loglambda> )) and simply use <loglambda>.
         return (
@@ -259,7 +261,7 @@ namespace Models{
             - lambda - std::lgamma(y_obs+1)
         );
     }
-    double PoissonLog::log_likelihood(arma::mat X_obs, arma::uvec y_obs) const {
+    double PoissonLog::log_likelihood(arma::mat X_obs, arma::uvec y_obs) const override {
         arma::vec lambda = arma::exp(X_obs * beta_ + beta0_);
         // avoid log(exp( <loglambda> )) and simply use <loglambda>.
         return (
