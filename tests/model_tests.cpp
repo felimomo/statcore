@@ -26,17 +26,15 @@ void test_gauss(){
 
     // fitting
     Models::Gaussian GM(dim, sigma);
-    GM.fit(X, y, &logger);
-    
+    infer_params = GM.fit(X, y, &logger);
 
-    // printing
+    // log writing
+    logger.summary();
+    logger.write();
     std::cout << "dim = " << dim << ", N = " << N <<"\n";
-    std::cout << "TARGETS:\n";
-    std::cout << "beta  = " << beta_targ
-              << "beta0 = " << beta0_targ << "\n";
-    std::cout << "INFERRED:\n";
-    std::cout << "beta  = " << GM.get_beta()
-              << "beta0 = " << GM.get_beta0() << "\n";
+    std::cout << "Log locations:\n" 
+              << logger.step_csv_ << "\n" 
+              << logger.summary_csv_ << "\n";
 }
 
 int main() {
