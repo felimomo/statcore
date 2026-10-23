@@ -7,7 +7,7 @@
 #include <random>
 #include <stdexcept>
 
-// #include "statcore/agg.h"
+#include "statcore/logger.h"
 
 // Lapack ABI
 extern "C" {

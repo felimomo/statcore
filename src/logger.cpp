@@ -78,4 +78,8 @@ namespace Logging{
         );
     }
 
+    void ModelLogger::write() {
+        //...
+    }
+
 }
