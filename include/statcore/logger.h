@@ -52,7 +52,7 @@ namespace Logging{
             std::vector<double> step_dB_;
             std::vector<double> step_loglik_;
             steady_clock::time_point start_;
-            steady_clock::time_point fit_time_;
+            std::chrono::duration<double> fit_time_;
             ErrorMetrics error_metrics_;
             double multipl_thresh_;
     };
