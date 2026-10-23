@@ -37,8 +37,8 @@ namespace Models{
             virtual double log_likelihood(arma::mat X_obs, arma::vec y_obs) const = 0;
             virtual double log_likelihood(arma::rowvec x_obs, double y_obs) const = 0;
             // binom and poisson:
-            double log_likelihood(arma::mat X_obs, arma::uvec y_obs) const = 0;
-            double log_likelihood(arma::rowvec x_obs, std::size_t y_obs) const = 0;
+            virtual double log_likelihood(arma::mat X_obs, arma::uvec y_obs) const = 0;
+            virtual double log_likelihood(arma::rowvec x_obs, std::size_t y_obs) const = 0;
     };
 
     class Gaussian : public ModelBase { // public keyword to inherit public methods publically by default
