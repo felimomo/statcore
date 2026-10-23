@@ -55,37 +55,36 @@ namespace Models{
 
     class BinomLogit : ModelBase {
         public:
-            BinomLogit(
-                std::size_t dim
-            );
+            BinomLogit(std::size_t dim);
             void update_pars_wts() override;;
             void irls_update_beta() override;;
-            double log_likelihood(arma::mat X_obs, arma::vec y_obs) const;
-            double log_likelihood(arma::rowvec x_obs, double y_obs) const;
+            double log_likelihood(arma::mat X_obs, arma::uvec y_obs) const;
+            double log_likelihood(arma::rowvec x_obs, std::size_t y_obs) const;
         private:
             std::size_t dim_;
             arma::vec beta_;
+            arma::vec eta_;
             double beta0_;
             arma::vec p_;
             arma::vec w_;
+            arma::vec z_;
             const double eta_max_=700.0;
     };
 
     class PoissonLog : ModelBase {
         public:
-            PoissonLog(
-                std::mt19937_64& rng,
-                std::size_t dim
-            );
-            void update_pars_wts() override;;
+            PoissonLog(std::size_t dim);
+            void update_pars_wts() override;
             void irls_update_beta() override;
-            double log_likelihood(arma::mat X_obs, arma::vec y_obs) const;
-            double log_likelihood(arma::rowvec x_obs, double y_obs) const;
+            double log_likelihood(arma::mat X_obs, arma::uvec y_obs) const;
+            double log_likelihood(arma::rowvec x_obs, std::size_t y_obs) const;
         private:
-            double lambda_;
+            arma::vec lambda_;
             arma::vec beta_;
+            arma::vec eta_;
             double beta0_;
             arma::vec w_;
+            arma::vec z_;
             const double eta_max_=700.0;
     };
 

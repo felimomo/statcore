@@ -1,6 +1,5 @@
 #include <cmath>
 #include <random>
-#include <stdio>
 #include <Armadillo>
 
 #include "statcore/models.h"
