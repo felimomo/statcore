@@ -1,4 +1,4 @@
-#include "statcore/logging.h"
+#include "statcore/logger.h"
 
 #include <chrono>
 #include <filesystem>
