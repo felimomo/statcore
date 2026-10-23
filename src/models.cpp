@@ -1,6 +1,6 @@
 #include "statcore/models.h"
 
-#include <Armadillo>
+#include <armadillo>
 
 #include <cmath>
 #include <numbers>
@@ -61,6 +61,8 @@ namespace Models{
         std::size_t max_iter
     ) {
         ingest_data(X, y);
+        update_pars_wts(); // initialize weights and response with data
+
         double dB = 1.0;
         std::size_t i = 0;
         arma::vec past_beta(dim_);
