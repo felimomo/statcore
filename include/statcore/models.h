@@ -4,6 +4,8 @@
 #include  <cmath>
 #include <armadillo>
 
+#include "statcore/logger.h"
+
 namespace Models{
     inline double binom_coeff(std::size_t N, std::size_t m);
 
