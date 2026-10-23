@@ -15,6 +15,7 @@ endif()
 
 find_package(Armadillo REQUIRED)
 find_package(Eigen3 REQUIRED NO_MODULE)
+find_package(LAPACK REQUIRED)
 
 # # header only library
 # add_library(agg INTERFACE)
@@ -46,6 +47,11 @@ target_include_directories(models PUBLIC
   ${ARMADILLO_INCLUDE_DIRS})
 target_link_libraries(models PUBLIC ${ARMADILLO_LIBRARIES})
 
+add_library(statcore INTERFACE)
+target_link_libraries(statcore INTERFACE agg matmult models LAPACK::LAPACK BLAS::BLAS)
+target_compile_options(statcore INTERFACE -g)
+target_link_options(statcore INTERFACE)
+
 ##
 # other executables
 ##
@@ -64,6 +70,7 @@ target_link_libraries(mat_bmk PRIVATE matmult)
 target_compile_options(mat_bmk PRIVATE -Wall -Wextra -Wpedantic)
 
 add_executable(model_tests tests/model_tests.cpp)
+target_link_libraries(model_tests PRIVATE statcore)
 target_link_libraries(model_tests PRIVATE models)
 target_compile_options(model_tests PRIVATE -O3 -Wall -Wextra -Wpedantic)
 
