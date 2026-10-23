@@ -135,13 +135,13 @@ namespace Models{
             arma::accu(
                 arma::square(y_obs - X_obs * beta_ - beta0_) 
             ) / (2 * pow(sigma_, 2))
-            - 0.5 * y_obs.n_cols * log(2 * pi * pow(sigma_, 2))
+            - 0.5 * y_obs.n_rows * log(2 * pi * pow(sigma_, 2))
         );
     }
     double Gaussian::log_likelihood(arma::rowvec x_obs, double y_obs) const {
         return (
-            arma::square(y_obs - x_obs * beta_ - beta0_)  / (2 * pow(sigma_, 2))
-            - 0.5 * y_obs.n_cols * log(2 * pi * pow(sigma_, 2))
+            pow(y_obs - x_obs * beta_ - beta0_, 2)  / (2 * pow(sigma_, 2))
+            - 0.5 * 1 * log(2 * pi * pow(sigma_, 2))
         );
     }
 
