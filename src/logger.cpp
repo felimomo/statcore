@@ -56,7 +56,7 @@ namespace Logging {
         std::filesystem::create_directories(root);
     }
 
-    void ModelLogger::begin_fit(std::size_t max_iter, double multipl_thresh = 0.05) {
+    void ModelLogger::begin_fit(std::size_t max_iter, double multipl_thresh) {
         multipl_thresh_ = multipl_thresh;
         step_dB_.clear();
         step_dB_.reserve(max_iter + 1);   
