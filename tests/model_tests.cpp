@@ -1,6 +1,6 @@
 #include <cmath>
 #include <random>
-#include <Armadillo>
+#include <armadillo>
 
 #include "statcore/models.h"
 
@@ -14,8 +14,8 @@ void test_gauss(){
 
     // data generation
     arma::mat X(N, dim, arma::fill::randn);
-    arma::vec y(dim);
-    for (std::size_t i = 0; i<dim; i++) {
+    arma::vec y(N);
+    for (std::size_t i = 0; i<N; i++) {
         double mu = arma::as_scalar(X.row(i) * beta_targ) + beta0_targ;
         y[i] = mu + arma::randn<double>() * sigma;
     }
