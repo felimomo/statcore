@@ -28,7 +28,7 @@ void test_gauss(std::size_t dim, std::size_t N){
     arma::vec infer_params = GM.fit(X, y, fit_options);
 
     // log writing
-    logger.summary(infer_params, arma::join_cols(beta_targ, arma::vec{beta0_targ}));
+    logger.summary(N, infer_params, arma::join_cols(beta_targ, arma::vec{beta0_targ}));
     logger.write();
     std::cout << "dim = " << dim << ", N = " << N <<"\n";
     std::cout << "Log locations:\n" 
@@ -37,7 +37,10 @@ void test_gauss(std::size_t dim, std::size_t N){
 }
 
 void test_binom(std::size_t dim, std::size_t N) {
-    arma::vec beta_targ = arma::randn(dim);
+    // norm-fixed beta to avoid p -> 0 or 1.
+    double s = 1.0;
+    arma::vec u = arma::randn(dim);
+    arma::vec beta_targ = s * u / arma::norm(u);
     double beta0_targ = 0.0;
 
     // data generation
@@ -63,7 +66,7 @@ void test_binom(std::size_t dim, std::size_t N) {
     arma::vec targ_params = arma::join_cols(beta_targ, arma::vec{beta0_targ}) ;
 
     // log writing
-    logger.summary(infer_params, arma::join_cols(beta_targ, arma::vec{beta0_targ}));
+    logger.summary(N, infer_params, arma::join_cols(beta_targ, arma::vec{beta0_targ}));
     logger.write();
     std::cout << "dim = " << dim << ", N = " << N <<"\n";
     std::cout << "Log locations:\n" 
@@ -72,8 +75,8 @@ void test_binom(std::size_t dim, std::size_t N) {
 }
 
 int main() {
-    std::size_t dim = 50; // dim of predictor space
-    std::size_t N = 20 * dim;  // n data rows
+    std::size_t dim = 100; // dim of predictor space
+    std::size_t N = 10000 * dim;  // n data rows
     arma::arma_rng::set_seed_random();
     std::cout << "\n#############\n"
               << " GAUSS MODEL\n"
