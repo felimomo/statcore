@@ -5,6 +5,7 @@
 bench/data/
 data/
 run/
+log/
 run_*
 
 ######
