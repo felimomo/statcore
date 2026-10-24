@@ -50,8 +50,8 @@ namespace Logging {
         const std::filesystem::path& root, 
         const std::string& name
     ) : 
-        step_csv_(root / (name + "_step.csv")), 
-        summary_csv_(root / (name + "_summary.csv")) 
+        step_csv_(root / ("log/" + name + "_step.csv")), 
+        summary_csv_(root / ("log/" + name + "_summary.csv")) 
     {
         std::filesystem::create_directories(root);
     }
