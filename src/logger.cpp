@@ -53,7 +53,7 @@ namespace Logging {
         step_csv_(root / ("log/" + name + "_step.csv")), 
         summary_csv_(root / ("log/" + name + "_summary.csv")) 
     {
-        std::filesystem::create_directories(root);
+        std::filesystem::create_directories(root / "log");
     }
 
     void ModelLogger::begin_fit(std::size_t max_iter, double multipl_thresh) {
