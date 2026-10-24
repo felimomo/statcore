@@ -86,9 +86,9 @@ namespace Models{
             if(fit_options.logger) { 
                 fit_options.logger -> print(
                     "\ni = ", i, 
-                    "\nmean beta =", arma::mean(beta_), 
+                    "\nmean beta = ", arma::mean(beta_), 
                     "\nloglikel. = ", curr_loglik,
-                    "\ndB = ", dB
+                    "\ndelt beta = ", dB
                 ); 
             }
             i++;
