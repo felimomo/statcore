@@ -27,9 +27,6 @@ void test_gauss(std::size_t dim, std::size_t N){
     Models::Gaussian GM(dim, sigma);
     arma::vec infer_params = GM.fit(X, y, fit_options);
 
-    std::cout << "inferred:\n" << infer_params << "\n";
-    std::cout << "target:\n"   << beta_targ << "\n";
-
     // log writing
     logger.summary(infer_params, arma::join_cols(beta_targ, arma::vec{beta0_targ}));
     logger.write();
@@ -78,6 +75,12 @@ int main() {
     std::size_t dim = 50; // dim of predictor space
     std::size_t N = 20 * dim;  // n data rows
     arma::arma_rng::set_seed_random();
+    std::cout << "\n#############\n"
+              << " GAUSS MODEL\n"
+              << "#############\n";
     test_gauss(dim, N);
+    std::cout << "\n#############\n"
+              << " BINOM MODEL\n"
+              << "#############\n";
     test_binom(dim, N);
 }

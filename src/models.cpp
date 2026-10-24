@@ -77,26 +77,22 @@ namespace Models{
             irls_update_beta();
             update_pars_wts();
             double curr_loglik = log_likelihood(X_, y_);
-            if(curr_loglik - past_loglik < -2) { beta_ = 0.5 * (beta_ + past_beta); }
+            if(curr_loglik - past_loglik < -2) { 
+                beta_ = 0.5 * (beta_ + past_beta); 
+                update_pars_wts();
+            }
             dB = arma::abs(beta_ - past_beta).max();
             if(fit_options.logger){ fit_options.logger -> fit_step(dB, curr_loglik); }
             if(fit_options.logger) { 
-                arma::vec eta = X_ * beta_ + beta0_;
-                arma::vec p = 1.0 / (1.0 + arma::exp(-eta));
-                arma::vec score = X_.t() * (y_ - p); 
                 fit_options.logger -> print(
                     "\ni = ", i, 
-                    "\nmean w    =", arma::mean(w_), 
-                    "\nmean eta  =", arma::mean(eta_),
                     "\nmean beta =", arma::mean(beta_), 
                     "\nloglikel. = ", curr_loglik,
-                    "\ndB = ", dB,
-                    "\nmean score: ", arma::mean(score),
-                    "\np range: ", p.min(), ", ", p.max()
+                    "\ndB = ", dB
                 ); 
             }
             i++;
-            double past_loglik = log_likelihood(X_, y_);
+            past_loglik = log_likelihood(X_, y_);
             if (i > fit_options.max_iter){
                 if(fit_options.logger){ fit_options.logger -> end_fit(); }
                 std::cout << "ModelBase::fit() warn:\n" 
@@ -164,7 +160,7 @@ namespace Models{
         const arma::vec& y_obs
     ) const {
         return (
-            arma::accu(
+            - arma::accu(
                 arma::square(y_obs - X_obs * beta_ - beta0_) 
             ) / (2 * pow(sigma_, 2))
             - 0.5 * y_obs.n_rows * log(2 * pi * pow(sigma_, 2))
