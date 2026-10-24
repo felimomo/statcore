@@ -61,6 +61,8 @@ namespace Models{
         const FitOptions& fit_options
     ) {
         ingest_data(X, y);
+        beta_ = arma::zeros<arma::vec>(beta_.size());
+        beta0_ = 0.0;
         update_pars_wts(); // initialize weights and response with data
 
         double dB = 1.0;
@@ -69,24 +71,32 @@ namespace Models{
         if(fit_options.logger){
             fit_options.logger -> begin_fit(fit_options.max_iter); // syntax for a pointer logger
         }
+        double past_loglik = log_likelihood(X_, y_);
         while (dB > fit_options.beta_thresh){
             past_beta = beta_;
             irls_update_beta();
             update_pars_wts();
-            double step_loglik = log_likelihood(X_, y_);
-            if(step_loglik < -10) { beta_ = 0.5 * (beta_ + past_beta); }
+            double curr_loglik = log_likelihood(X_, y_);
+            if(curr_loglik - past_loglik < -2) { beta_ = 0.5 * (beta_ + past_beta); }
             dB = arma::abs(beta_ - past_beta).max();
-            if(fit_options.logger){ fit_options.logger -> fit_step(dB, step_loglik); }
+            if(fit_options.logger){ fit_options.logger -> fit_step(dB, curr_loglik); }
             if(fit_options.logger) { 
+                arma::vec eta = X_ * beta_ + beta0_;
+                arma::vec p = 1.0 / (1.0 + arma::exp(-eta));
+                arma::vec score = X_.t() * (y_ - p); 
                 fit_options.logger -> print(
-                    "i = ", i, 
+                    "\ni = ", i, 
                     "\nmean w    =", arma::mean(w_), 
                     "\nmean eta  =", arma::mean(eta_),
                     "\nmean beta =", arma::mean(beta_), 
-                    "\ndB = ", dB, "\n"
+                    "\nloglikel. = ", curr_loglik,
+                    "\ndB = ", dB,
+                    "\nmean score: ", arma::mean(score),
+                    "\np range: ", p.min(), ", ", p.max()
                 ); 
             }
             i++;
+            double past_loglik = log_likelihood(X_, y_);
             if (i > fit_options.max_iter){
                 if(fit_options.logger){ fit_options.logger -> end_fit(); }
                 std::cout << "ModelBase::fit() warn:\n" 
@@ -112,7 +122,7 @@ namespace Models{
     ): ModelBase(dim), sigma_(sigma) {
         // initialize random normal:
         beta_ = arma::randn(dim_);
-        beta0_ = arma::randn<double>();
+        beta0_ = 0.0;
     }
     void Gaussian::update_pars_wts(){
         // eta_ = X_ * beta_ + beta0_; // unnecessary
@@ -215,16 +225,12 @@ namespace Models{
         const arma::mat& X_obs, 
         const arma::vec& y_obs
     ) const {
+        // binomial coeff = 1 for single trial, y = 0, 1.
         arma::vec p = 1.0 / (1.0 + arma::exp(- X_obs * beta_ - beta0_));
         std::size_t n = y_obs.n_rows;
-        double log_binom = (
-            std::lgamma(n + 1) 
-            - std::lgamma(arma::accu(y_obs) + 1)
-            - std::lgamma(n - arma::accu(y_obs) + 1)
-        );
         return arma::accu(
-            y_obs % arma::log(p) - (1 - y_obs) % arma::log(1 - p)
-        ) + log_binom;
+            y_obs % arma::log(p) + (1 - y_obs) % arma::log(1 - p)
+        );
     }
     // double BinomLogit::log_likelihood(arma::rowvec x_obs, std::size_t y_obs) const {
     //     double log_binom = std::lgamma(1 + 1) - std::lgamma(y_obs + 1) - std::lgamma(1 - y_obs + 1);

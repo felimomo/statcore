@@ -12,7 +12,7 @@ namespace Models{
 
     struct FitOptions {
         double beta_thresh = 1e-8;
-        std::size_t max_iter = 100;
+        std::size_t max_iter = 500;
         Logging::ModelLogger* logger = nullptr;
     };
 
@@ -66,7 +66,7 @@ namespace Models{
         private:
             arma::vec p_;
             arma::vec z_;
-            const double eta_max_=10.0;
+            const double eta_max_=200.0;
     };
 
     class PoissonLog : public ModelBase { // public keyword to inherit public methods publically by default
