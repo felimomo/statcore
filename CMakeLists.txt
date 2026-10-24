@@ -46,6 +46,7 @@ target_include_directories(models PUBLIC
   ${CMAKE_CURRENT_SOURCE_DIR}/include
   ${ARMADILLO_INCLUDE_DIRS})
 target_link_libraries(models PUBLIC ${ARMADILLO_LIBRARIES})
+target_link_libraries(models PUBLIC logger)
 
 add_library(logger src/logger.cpp)
 target_include_directories(
