@@ -24,7 +24,7 @@ void test_gauss(){
     // logging
     Logging::ModelLogger logger {}; // initialize logger object with default arguments
 
-    FitOptions fit_options;
+    Models::FitOptions fit_options;
     fit_options.logger = &logger;
     // fitting
     Models::Gaussian GM(dim, sigma);
