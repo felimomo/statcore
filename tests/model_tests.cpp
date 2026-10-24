@@ -74,6 +74,42 @@ void test_binom(std::size_t dim, std::size_t N) {
               << logger.get_summary_csv() << "\n";
 }
 
+void test_poisson(std::size_t dim, std::size_t N) {
+    // generate data:
+    // independent variables
+    arma::vec beta_targ = arma::randn(dim);
+    double beta0_targ = 0.0;
+    arma::mat X(N, dim, arma::fill::randn);
+
+    // dependent variables
+    std::mt19937 rng(std::random_device{}()); // randomized seed
+    arma::vec y(N);
+    for (std::size_t i = 0; i < N; ++i) {
+        double lambda = std::exp(arma::as_scalar(X.row(i) * beta_targ) + beta0_targ);
+        std::poisson_distribution<int> pois(lambda);
+        y(i) = pois(rng);
+    }
+
+    // logging
+    Logging::ModelLogger logger(".", "binom_log");
+    Models::FitOptions fit_options;
+    fit_options.logger = &logger;
+
+    // fitting
+    Models::PoissonLog PL(dim);
+    arma::vec infer_params = PL.fit(X, y, fit_options);
+
+    arma::vec targ_params = arma::join_cols(beta_targ, arma::vec{beta0_targ}) ;
+
+    // log writing
+    logger.summary(N, infer_params, arma::join_cols(beta_targ, arma::vec{beta0_targ}));
+    logger.write();
+    std::cout << "dim = " << dim << ", N = " << N <<"\n";
+    std::cout << "Log locations:\n" 
+              << logger.get_step_csv() << "\n" 
+              << logger.get_summary_csv() << "\n";
+}
+
 int main() {
     std::size_t dim = 100; // dim of predictor space
     std::size_t N = 10000 * dim;  // n data rows
@@ -86,4 +122,8 @@ int main() {
               << " BINOM MODEL\n"
               << "#############\n";
     test_binom(dim, N);
+    std::cout << "\n#############\n"
+              << " POISSON MODEL\n"
+              << "#############\n";
+    test_poisson(dim, N);   
 }
