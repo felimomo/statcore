@@ -31,7 +31,7 @@ void test_gauss(){
     arma::vec infer_params = GM.fit(X, y, fit_options);
 
     // log writing
-    logger.summary();
+    logger.summary(infer_params, rma::join_cols(beta_targ, arma::vec{beta0_targ}));
     logger.write();
     std::cout << "dim = " << dim << ", N = " << N <<"\n";
     std::cout << "Log locations:\n" 
