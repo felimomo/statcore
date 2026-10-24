@@ -46,6 +46,13 @@ namespace Logging{
                 arma::vec targ_params
             );
             void write();
+            //
+            // print in header so compiler knows types of args passed
+            template <typename... Args>
+            void print(const Args&... args){
+                (std::cout << ... << args) << '\n';
+            }
+            //
             std::filesystem::path get_step_csv() {return step_csv_; }
             std::filesystem::path get_summary_csv() {return summary_csv_; }
         private:
