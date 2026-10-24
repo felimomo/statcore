@@ -81,10 +81,10 @@ namespace Logging {
         arma::vec infer_params, 
         arma::vec targ_params
     ){
-        ErrorMetrics error_metrics_(
-            arma::vec infer_params, 
-            arma::vec targ_params, 
-            double multipl_thresh_
+        error_metrics_ = ErrorMetrics(
+            infer_params, 
+            targ_params, 
+            multipl_thresh_
         );
     }
 
