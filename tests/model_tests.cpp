@@ -93,7 +93,7 @@ void test_poisson(std::size_t dim, std::size_t N) {
     }
 
     // logging
-    Logging::ModelLogger logger(".", "binom_log");
+    Logging::ModelLogger logger(".", "poisson_log");
     Models::FitOptions fit_options;
     fit_options.logger = &logger;
 
