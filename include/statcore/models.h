@@ -11,7 +11,7 @@ namespace Models{
 
 
     struct FitOptions {
-        double beta_thresh = 0.001;
+        double beta_thresh = 1e-8;
         std::size_t max_iter = 100;
         Logging::ModelLogger* logger = nullptr;
     };
