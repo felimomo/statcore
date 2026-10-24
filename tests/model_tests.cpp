@@ -22,7 +22,7 @@ void test_gauss(){
     }
 
     // logging
-    Logging::ModelLogger logger {}; // initialize logger object with default arguments
+    Logging::ModelLogger logger(".", "gaussian_log"); // initialize logger object with default arguments
 
     Models::FitOptions fit_options;
     fit_options.logger = &logger;
