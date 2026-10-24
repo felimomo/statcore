@@ -13,14 +13,17 @@ namespace Logging {
     using std::chrono::steady_clock;
 
     ErrorMetrics::ErrorMetrics(
+        std::size_t N,
         arma::vec& infer_params, 
         arma::vec& targ_params, 
         double multipl_thresh,
         double beta_thresh
     ): 
         multipl_thresh_(multipl_thresh),
-        beta_thresh_(beta_thresh)
+        beta_thresh_(beta_thresh),
+        N_(N)
     {
+        dim_ = infer_params.size() - 1;
         arma::vec err = arma::abs(infer_params - targ_params);
         max_err = err.max();
         mean_err = arma::mean(err);
@@ -78,10 +81,12 @@ namespace Logging {
     }
 
     void ModelLogger::summary(
+        std::size_t N,
         arma::vec infer_params, 
         arma::vec targ_params
     ){
         error_metrics_ = ErrorMetrics(
+            N,
             infer_params, 
             targ_params, 
             multipl_thresh_

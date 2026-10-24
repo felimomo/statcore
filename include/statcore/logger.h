@@ -14,6 +14,9 @@ namespace Logging{
     using std::chrono::steady_clock;
 
     struct ErrorMetrics {
+        // meta
+        std::size_t N_=0;
+        std::size_t dim_=0;
         // data
         double max_err = 0.0;
         double mean_err = 0.0;
@@ -27,6 +30,7 @@ namespace Logging{
 
         ErrorMetrics() = default; // for header declaration
         ErrorMetrics(
+            std::size_t N,
             arma::vec& infer_params, 
             arma::vec& targ_params, 
             double multipl_thresh = 0.05, 
@@ -42,6 +46,7 @@ namespace Logging{
             void fit_step(double dB, double log_likelihood);
             void end_fit();
             void summary(
+                std::size_t N,
                 arma::vec infer_params, 
                 arma::vec targ_params
             );
