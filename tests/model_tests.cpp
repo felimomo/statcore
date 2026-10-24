@@ -77,7 +77,9 @@ void test_binom(std::size_t dim, std::size_t N) {
 void test_poisson(std::size_t dim, std::size_t N) {
     // generate data:
     // independent variables
-    arma::vec beta_targ = arma::randn(dim);
+    double s = 1.0;
+    arma::vec u = arma::randn(dim);
+    arma::vec beta_targ = s * u / arma::norm(u);
     double beta0_targ = 0.0;
     arma::mat X(N, dim, arma::fill::randn);
 
