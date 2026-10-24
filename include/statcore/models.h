@@ -9,6 +9,13 @@
 namespace Models{
     inline double binom_coeff(std::size_t N, std::size_t m);
 
+
+    struct FitOptions {
+        double beta_thresh = 0.001;
+        std::size_t max_iter = 100;
+        Logging::ModelLogger* logger = nullptr;
+    };
+
     class ModelBase {
         public:
             explicit ModelBase(std::size_t dim);
@@ -17,9 +24,7 @@ namespace Models{
             arma::vec fit(
                 const arma::mat& X, 
                 const arma::vec& y, 
-                double beta_thresh = 0.001, 
-                std::size_t max_iter = 100,
-                Logging::ModelLogger* logger = nullptr
+                const FitOptions& fit_options
             );
             arma::vec get_beta();
             double get_beta0();

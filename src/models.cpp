@@ -57,9 +57,7 @@ namespace Models{
     arma::vec ModelBase::fit(
         const arma::mat& X, 
         const arma::vec& y, 
-        double beta_thresh, 
-        std::size_t max_iter,
-        Logging::ModelLogger* logger
+        const FitOptions& fit_options
     ) {
         ingest_data(X, y);
         update_pars_wts(); // initialize weights and response with data
@@ -67,25 +65,25 @@ namespace Models{
         double dB = 1.0;
         std::size_t i = 0;
         arma::vec past_beta(dim_);
-        if(logger){
-            logger -> begin_fit(max_iter); // syntax for a pointer logger
+        if(fit_options.logger){
+            fit_options.logger -> begin_fit(fit_options.max_iter); // syntax for a pointer logger
         }
-        while (dB > beta_thresh){
+        while (dB > fit_options.beta_thresh){
             past_beta = beta_;
             irls_update_beta();
             update_pars_wts();
             dB = arma::abs(beta_ - past_beta).max();
-            if(logger){ logger -> fit_step(dB, log_likelihood(X_, y_)); }
+            if(fit_options.logger){ fit_options.logger -> fit_step(dB, log_likelihood(X_, y_)); }
             i++;
-            if (i > max_iter){
-                if(logger){ logger -> end_fit(); }
+            if (i > fit_options.max_iter){
+                if(fit_options.logger){ fit_options.logger -> end_fit(); }
                 std::cout << "ModelBase::fit() warn:\n" 
                             << "exceeded max_iter with delta-beta = " 
                             << dB << "\n";
                 return arma::join_cols(beta_, arma::vec{beta0_});
             }
         }
-        if (logger) { logger -> end_fit(); }
+        if (fit_options.logger) { fit_options.logger -> end_fit(); }
         return arma::join_cols(beta_, arma::vec{beta0_});
     }
     arma::vec ModelBase::get_beta(){

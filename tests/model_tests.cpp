@@ -24,9 +24,11 @@ void test_gauss(){
     // logging
     Logging::ModelLogger logger {}; // initialize logger object with default arguments
 
+    FitOptions fit_options;
+    fit_options.logger = &logger;
     // fitting
     Models::Gaussian GM(dim, sigma);
-    arma::vec infer_params = GM.fit(X, y, &logger);
+    arma::vec infer_params = GM.fit(X, y, fit_options);
 
     // log writing
     logger.summary();
