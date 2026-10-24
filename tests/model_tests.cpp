@@ -35,8 +35,8 @@ void test_gauss(){
     logger.write();
     std::cout << "dim = " << dim << ", N = " << N <<"\n";
     std::cout << "Log locations:\n" 
-              << logger.step_csv_ << "\n" 
-              << logger.summary_csv_ << "\n";
+              << logger.get_step_csv() << "\n" 
+              << logger.get_summary_csv() << "\n";
 }
 
 int main() {

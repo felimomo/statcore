@@ -46,6 +46,8 @@ namespace Logging{
                 arma::vec targ_params
             );
             void write();
+            std::filesystem::path get_step_csv() {return step_csv_; }
+            std::filesystem::path get_summary_csv() {return summary_csv_; }
         private:
             std::filesystem::path step_csv_;
             std::filesystem::path summary_csv_;
