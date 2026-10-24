@@ -61,8 +61,9 @@ void test_binom(std::size_t dim, std::size_t N) {
     Models::BinomLogit BL(dim);
     arma::vec infer_params = BL.fit(X, y, fit_options);
 
-    std::cout << "inferred:\n" << infer_params << "\n";
-    std::cout << "target:\n"   << beta_targ << beta0_targ << "\n";
+    std::cout << "p range = " << p.min() << ", " << p.max() <<"\n\n";
+
+    arma::vec targ_params = arma::join_cols(beta_targ, arma::vec{beta0_targ}) ;
 
     // log writing
     logger.summary(infer_params, arma::join_cols(beta_targ, arma::vec{beta0_targ}));
@@ -74,9 +75,9 @@ void test_binom(std::size_t dim, std::size_t N) {
 }
 
 int main() {
-    std::size_t dim = 10; // dim of predictor space
-    std::size_t N = 50;  // n data rows
+    std::size_t dim = 50; // dim of predictor space
+    std::size_t N = 20 * dim;  // n data rows
     arma::arma_rng::set_seed_random();
-    // test_gauss(dim, N);
+    test_gauss(dim, N);
     test_binom(dim, N);
 }
