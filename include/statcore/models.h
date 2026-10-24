@@ -36,6 +36,7 @@ namespace Models{
             arma::vec beta_;
             double beta0_;
             arma::vec w_;
+            arma::vec eta_; // for logging
         private:
             virtual void irls_update_beta() = 0;
             virtual void update_pars_wts() = 0;
@@ -52,7 +53,6 @@ namespace Models{
             double log_likelihood(const arma::mat& X_obs, const arma::vec& y_obs) const override;
         private:
             double sigma_;
-            arma::vec eta_;
             arma::vec z_;
     };
 
@@ -63,7 +63,6 @@ namespace Models{
             void irls_update_beta() override;
             double log_likelihood(const arma::mat& X_obs, const arma::vec& y_obs) const override;
         private:
-            arma::vec eta_;
             arma::vec p_;
             arma::vec z_;
             const double eta_max_=700.0;
@@ -77,7 +76,6 @@ namespace Models{
             double log_likelihood(const arma::mat& X_obs, const arma::vec& y_obs) const override;
         private:
             arma::vec lambda_;
-            arma::vec eta_;
             arma::vec z_;
             const double eta_max_=700.0;
     };

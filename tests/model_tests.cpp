@@ -5,10 +5,7 @@
 #include "statcore/models.h"
 #include "statcore/logger.h"
 
-void test_gauss(){
-    // constants
-    std::size_t dim = 500; // dim of predictor space
-    std::size_t N = 20000;  // n data rows
+void test_gauss(std::size_t dim, std::size_t N){
     arma::vec beta_targ = arma::randn(dim);
     double beta0_targ = 0.0;
     double sigma = 0.05;
@@ -25,10 +22,16 @@ void test_gauss(){
     Logging::ModelLogger logger(".", "gaussian_log");
     Models::FitOptions fit_options;
     fit_options.logger = &logger;
-    
+
     // fitting
     Models::Gaussian GM(dim, sigma);
     arma::vec infer_params = GM.fit(X, y, fit_options);
+
+    std::cout << "inferred:\n" << infer_params << "\n";
+    std::cout << "target:\n"   << beta_targ << "\n";
+    std::cout << "Data:\n";
+    std::cout << X << "\n";
+    std::cout << y << "\n";
 
     // log writing
     logger.summary(infer_params, arma::join_cols(beta_targ, arma::vec{beta0_targ}));
@@ -39,10 +42,7 @@ void test_gauss(){
               << logger.get_summary_csv() << "\n";
 }
 
-void test_binom() {
-    // constants
-    std::size_t dim = 500; // dim of predictor space
-    std::size_t N = 20000;  // n data rows
+void test_binom(std::size_t dim, std::size_t N) {
     arma::vec beta_targ = arma::randn(dim);
     double beta0_targ = 0.0;
 
@@ -64,6 +64,12 @@ void test_binom() {
     Models::BinomLogit BL(dim);
     arma::vec infer_params = BL.fit(X, y, fit_options);
 
+    std::cout << "inferred:\n" << infer_params << "\n";
+    std::cout << "target:\n"   << beta_targ << beta0_targ << "\n";
+    std::cout << "Data:\n";
+    std::cout << X << "\n";
+    std::cout << y << "\n";
+
     // log writing
     logger.summary(infer_params, arma::join_cols(beta_targ, arma::vec{beta0_targ}));
     logger.write();
@@ -74,6 +80,9 @@ void test_binom() {
 }
 
 int main() {
-    test_gauss();
-    test_binom();
+    std::size_t dim = 10; // dim of predictor space
+    std::size_t N = 50;  // n data rows
+    arma::arma_rng::set_seed_random();
+    // test_gauss(dim, N);
+    test_binom(dim, N);
 }

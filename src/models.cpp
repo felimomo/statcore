@@ -41,8 +41,8 @@ namespace Models{
     // ModelBase implementation
     ModelBase::ModelBase(std::size_t dim): dim_(dim) {
         // initialize random normal:
-        beta_ = arma::randn(dim_);
-        beta0_ = arma::randn<double>();
+        beta_ = arma::zeros<arma::vec>(dim_);
+        beta0_ = 0.0;
     }
     void ModelBase::ingest_data(const arma::mat& X, const arma::vec& y) {
         if (y.n_rows != X.n_rows) {
@@ -74,6 +74,15 @@ namespace Models{
             update_pars_wts();
             dB = arma::abs(beta_ - past_beta).max();
             if(fit_options.logger){ fit_options.logger -> fit_step(dB, log_likelihood(X_, y_)); }
+            if(fit_options.logger) { 
+                fit_options.logger -> print(
+                    "i = ", i, 
+                    "\nmean w    =", arma::mean(w_), 
+                    "\nmean eta  =", arma::mean(eta_),
+                    "\nmean beta =", arma::mean(beta_), 
+                    "\ndB = ", dB, "\n"
+                ); 
+            }
             i++;
             if (i > fit_options.max_iter){
                 if(fit_options.logger){ fit_options.logger -> end_fit(); }
