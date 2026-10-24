@@ -29,9 +29,6 @@ void test_gauss(std::size_t dim, std::size_t N){
 
     std::cout << "inferred:\n" << infer_params << "\n";
     std::cout << "target:\n"   << beta_targ << "\n";
-    std::cout << "Data:\n";
-    std::cout << X << "\n";
-    std::cout << y << "\n";
 
     // log writing
     logger.summary(infer_params, arma::join_cols(beta_targ, arma::vec{beta0_targ}));
@@ -66,9 +63,6 @@ void test_binom(std::size_t dim, std::size_t N) {
 
     std::cout << "inferred:\n" << infer_params << "\n";
     std::cout << "target:\n"   << beta_targ << beta0_targ << "\n";
-    std::cout << "Data:\n";
-    std::cout << X << "\n";
-    std::cout << y << "\n";
 
     // log writing
     logger.summary(infer_params, arma::join_cols(beta_targ, arma::vec{beta0_targ}));

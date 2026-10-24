@@ -31,6 +31,7 @@ namespace Models{
             virtual double log_likelihood(const arma::mat& X_obs, const arma::vec& y_obs) const = 0;
         protected: // to be able to access from child classes
             std::size_t dim_;
+            std::size_t N_;
             arma::mat X_;
             arma::vec y_;
             arma::vec beta_;
@@ -65,7 +66,7 @@ namespace Models{
         private:
             arma::vec p_;
             arma::vec z_;
-            const double eta_max_=700.0;
+            const double eta_max_=10.0;
     };
 
     class PoissonLog : public ModelBase { // public keyword to inherit public methods publically by default

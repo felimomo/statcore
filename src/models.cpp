@@ -53,6 +53,7 @@ namespace Models{
         }
         X_ = X;
         y_ = y;
+        N_ = X.n_rows;
     }
     arma::vec ModelBase::fit(
         const arma::mat& X, 
@@ -72,8 +73,10 @@ namespace Models{
             past_beta = beta_;
             irls_update_beta();
             update_pars_wts();
+            double step_loglik = log_likelihood(X_, y_);
+            if(step_loglik < -10) { beta_ = 0.5 * (beta_ + past_beta); }
             dB = arma::abs(beta_ - past_beta).max();
-            if(fit_options.logger){ fit_options.logger -> fit_step(dB, log_likelihood(X_, y_)); }
+            if(fit_options.logger){ fit_options.logger -> fit_step(dB, step_loglik); }
             if(fit_options.logger) { 
                 fit_options.logger -> print(
                     "i = ", i, 
