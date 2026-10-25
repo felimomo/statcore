@@ -55,14 +55,7 @@ namespace Models{
         y_ = y;
         N_ = X.n_rows;
     }
-    arma::vec ModelBase::fit(
-        const arma::mat& X, 
-        const arma::vec& y, 
-        const FitOptions& fit_options
-    ) {
-        ingest_data(X, y);
-        beta_ = arma::zeros<arma::vec>(beta_.size());
-        beta0_ = 0.0;
+    arma::vec ModelBase::fit_loop(const FitOptions& fit_options) {
         update_pars_wts(); // initialize weights and response with data
 
         double dB = 1.0;
@@ -103,6 +96,16 @@ namespace Models{
         }
         if (fit_options.logger) { fit_options.logger -> end_fit(); }
         return arma::join_cols(beta_, arma::vec{beta0_});
+    }
+    arma::vec ModelBase::fit(
+        const arma::mat& X, 
+        const arma::vec& y, 
+        const FitOptions& fit_options
+    ) {
+        ingest_data(X, y);
+        beta_ = arma::zeros<arma::vec>(beta_.size());
+        beta0_ = 0.0;
+        return fit_loop(fit_options);
     }
     
     arma::vec ModelBase::get_beta(){

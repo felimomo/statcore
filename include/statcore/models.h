@@ -21,6 +21,7 @@ namespace Models{
             explicit ModelBase(std::size_t dim);
             virtual ~ModelBase() = default;
             void ingest_data(const arma::mat& X, const arma::vec& y);
+            arma::vec fit_loop(const FitOptions& fit_options);
             arma::vec fit(
                 const arma::mat& X, 
                 const arma::vec& y, 
