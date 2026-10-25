@@ -61,14 +61,14 @@ ModelBenchmarks benchmark_model(
     infer_params = fit_loop(X, y, {}); // {} uses default FitOptions variables.
     runtime = steady_clock::now() - start;
     //
-    return ModelBenchmarks(
+    return ModelBenchmarks{
         runtime, 
         ErrorMetrics{
             y.n_rows,
             infer_params, 
             targ_params
         }
-    );
+    };
 }
 
 
