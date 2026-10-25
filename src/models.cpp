@@ -104,6 +104,7 @@ namespace Models{
         if (fit_options.logger) { fit_options.logger -> end_fit(); }
         return arma::join_cols(beta_, arma::vec{beta0_});
     }
+    
     arma::vec ModelBase::get_beta(){
         return beta_;
     }
