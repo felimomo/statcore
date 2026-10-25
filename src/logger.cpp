@@ -14,8 +14,8 @@ namespace Logging {
 
     ErrorMetrics::ErrorMetrics(
         std::size_t N,
-        arma::vec& infer_params, 
-        arma::vec& targ_params, 
+        const arma::vec& infer_params, 
+        const arma::vec& targ_params, 
         double multipl_thresh,
         double beta_thresh
     ): 

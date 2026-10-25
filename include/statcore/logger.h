@@ -31,8 +31,8 @@ namespace Logging{
         ErrorMetrics() = default; // for header declaration
         ErrorMetrics(
             std::size_t N,
-            arma::vec& infer_params, 
-            arma::vec& targ_params, 
+            const arma::vec& infer_params, 
+            const arma::vec& targ_params, 
             double multipl_thresh = 0.05, 
             double beta_thresh = 0.0001
         );
