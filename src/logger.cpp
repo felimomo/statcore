@@ -30,14 +30,9 @@ namespace Logging {
         median_err = arma::median(err);
         err_std = arma::stddev(err);
 
-        arma::uvec healthy_idx = arma::find(infer_params > beta_thresh);
-
-        arma::uword N_wrong = arma::accu(
-            arma::abs( 
-                err.elem(healthy_idx) % (1 / infer_params.elem(healthy_idx))
-            ) 
-            > multipl_thresh
-        );
+        double prec = 1e-6; // magic number for stable relative errors
+        arma::vec healthy_rel_errs = err % (1 / (arma::abs(infer_params) + prec));
+        rma::uword N_wrong = arma::accu(arma::abs(healthy_rel_errs) > multipl_thresh);
         frac_wrong = static_cast<double>(N_wrong) / healthy_idx.size(); 
     }
     void ErrorMetrics::print_summary(const std::filesystem::path& file) {
