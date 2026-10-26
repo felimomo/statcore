@@ -53,7 +53,6 @@ namespace Logging {
     {
         std::filesystem::create_directories(root / "log");
     }
-
     void ModelLogger::begin_fit(std::size_t max_iter, double multipl_thresh) {
         multipl_thresh_ = multipl_thresh;
         step_dB_.clear();
@@ -62,11 +61,9 @@ namespace Logging {
         step_loglik_.reserve(max_iter + 1); 
         start_ = steady_clock::now();
     }
-
     void ModelLogger::end_fit() {
         fit_time_ = steady_clock::now() - start_;
     }
-
     void ModelLogger::fit_step(
         double dB, 
         double log_lik
@@ -74,7 +71,6 @@ namespace Logging {
         step_dB_.push_back(dB);
         step_loglik_.push_back(log_lik);
     }
-
     void ModelLogger::summary(
         std::size_t N,
         arma::vec infer_params, 
@@ -87,7 +83,6 @@ namespace Logging {
             multipl_thresh_
         );
     }
-
     void ModelLogger::write() {
         // summary
         error_metrics_.print_summary(summary_csv_);
