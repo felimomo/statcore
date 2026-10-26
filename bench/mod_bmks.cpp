@@ -72,4 +72,27 @@ ModelBenchmarks benchmark_model(
 }
 
 
-int main () {}
+int main () {
+    size_t N_iter = 25;
+
+    size_t dim = 20;
+    size_t N = dim * 10000; // tbd: loop over dimensions
+
+    // Gaussian
+    gaussian_bmk = std::vector<ModelBenchmarks>(N_iter)
+    #pragma omp parallel for
+    for(size_t i = 0; i < N_iter; i++) {
+        // 1. sample data
+        arma::vec beta = get_targets(dim);
+        double beta0 = 0.0;
+        double sigma = 0.05;
+        arma::mat X = arma::randn<arma::mat>(N, dim);
+        arma::vec y = gen_y_gauss(const arma::mat& X, const arma::vec& beta, double beta0, double sigma);
+        
+        // 2. initialize model
+        mod = Gaussian(dim, sigma);
+        
+        // 3. benchmark fit
+        gaussian_bmk[i] = benchmark_model(mod, X, y, targ_params);
+    }
+}
