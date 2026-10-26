@@ -1,4 +1,6 @@
 #include <chron>
+#include <filesystem>
+#include <fstream>
 #include <armadillo>
 
 #include "statcore/models.h"
@@ -6,6 +8,7 @@
 
 using std::size_t;
 using std::chrono::steady_clock;
+using std::filesystem::path;
 using Logging::ErrorMetrics;
 using Models::FitOptions;
 using Models::ModelBase;
@@ -71,6 +74,23 @@ ModelBenchmarks benchmark_model(
     };
 }
 
+void write_bmks(const std::vector<ModelBenchmarks>& bmk_vec, const path& out_path) {
+    std::ofstream out_file;
+    out_file.open(out_path);
+    out_file << "dim,N,runtime,max_err,mean_err,median_err,err_std,frac_wrong\n";
+    for(int i = 0; const auto& bmk: bmk_vec){
+        out_file << bmk.error_metrics.N_ << ","
+                 << bmk.error_metrics.dim_ << ","
+                 << bmk.runtime << ","
+                 << bmk.error_metrics.max_err << ","
+                 << bmk.error_metrics.mean_err << ","
+                 << bmk.error_metrics.median_err << ","
+                 << bmk.error_metrics.err_std << ","
+                 << bmk.error_metrics.farc_wrong << "\n";
+        i++;
+    }
+}
+
 
 int main () {
     size_t N_iter = 25;
@@ -79,7 +99,7 @@ int main () {
     size_t N = dim * 10000; // tbd: loop over dimensions
 
     // Gaussian
-    gaussian_bmk = std::vector<ModelBenchmarks>(N_iter)
+    std::vector<ModelBenchmarks> gaussian_bmk(N_iter)
     #pragma omp parallel for
     for(size_t i = 0; i < N_iter; i++) {
         // 1. sample data
