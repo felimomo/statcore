@@ -115,4 +115,6 @@ int main () {
         // 3. benchmark fit
         gaussian_bmk[i] = benchmark_model(mod, X, y, targ_params);
     }
+    // write it out
+    write_bmks(gaussian_bmk, "./bench/data/GaussianId_GLM_bmk.csv");
 }
