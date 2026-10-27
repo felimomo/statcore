@@ -163,7 +163,7 @@ int main () {
             std::mt19937 rng(base_seed + i);
             gaussian_bmk[i] = bmk_subroutine(dim, N, rng);
         }
-        write_accu_bmks(gaussian_bmk, "./bench/data/GaussianId_GLM_accu_bmk.csv");
+        write_accu_bmks(gaussian_bmk, "./bench/data/Gaussian_GLM_accu_bmk.csv");
     }
 
     // runtime benchmarks (fewer)
@@ -178,6 +178,6 @@ int main () {
             runtimes[i] = gaussian_bmk[i].runtime;
         }
         std::cout << "mean runtime: " << arma::mean(runtimes) << "\n"; 
-        write_runtime_bmks(gaussian_bmk, "./bench/data/GaussianId_GLM_runtime_bmk.csv");
+        write_runtime_bmks(gaussian_bmk, "./bench/data/Gaussian_GLM_runtime_bmk.csv");
     }
 }
