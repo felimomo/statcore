@@ -32,8 +32,8 @@ namespace Logging {
 
         double prec = 1e-6; // magic number for stable relative errors
         arma::vec healthy_rel_errs = err % (1 / (arma::abs(infer_params) + prec));
-        rma::uword N_wrong = arma::accu(arma::abs(healthy_rel_errs) > multipl_thresh);
-        frac_wrong = static_cast<double>(N_wrong) / healthy_idx.size(); 
+        arma::uword N_wrong = arma::accu(arma::abs(healthy_rel_errs) > multipl_thresh);
+        frac_wrong = static_cast<double>(N_wrong) / N_; 
     }
     void ErrorMetrics::print_summary(const std::filesystem::path& file) {
         std::ofstream file_stream;
