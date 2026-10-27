@@ -105,6 +105,23 @@ void write_accu_bmks(const std::vector<ModelBenchmarks>& bmk_vec, const path& ou
     }
 }
 
+void write_runtime_bmks(const std::vector<ModelBenchmarks>& bmk_vec, const path& out_path) {
+    std::ofstream out_file;
+    out_file.open(out_path);
+    out_file << "dim,N,runtime,max_err,mean_err,median_err,err_std,frac_wrong\n";
+    for(int i = 0; const auto& bmk: bmk_vec){
+        out_file << bmk.error_metrics.N_ << ","
+                 << bmk.error_metrics.dim_ << ","
+                 << bmk.runtime << ","
+                 << bmk.error_metrics.max_err << ","
+                 << bmk.error_metrics.mean_err << ","
+                 << bmk.error_metrics.median_err << ","
+                 << bmk.error_metrics.err_std << ","
+                 << bmk.error_metrics.frac_wrong << "\n";
+        i++;
+    }
+}
+
 ModelBenchmarks bmk_subroutine(size_t dim, size_t N, std::mt19937& rng) {
     // 1. sample 
     // 1.1 model params
@@ -146,7 +163,7 @@ int main () {
             std::mt19937 rng(base_seed + i);
             gaussian_bmk[i] = bmk_subroutine(dim, N, rng);
         }
-        write_accu_bmks(gaussian_bmk, "./bench/data/GaussianId_accu_GLM_bmk.csv");
+        write_accu_bmks(gaussian_bmk, "./bench/data/GaussianId_GLM_accu_bmk.csv");
     }
 
     // runtime benchmarks (fewer)
@@ -160,6 +177,7 @@ int main () {
             gaussian_bmk[i] = bmk_subroutine(dim, N, rng);
             runtimes[i] = gaussian_bmk[i].runtime;
         }
-        std::cout << "mean runtime: " << arma::mean(runtimes) << "\n"; // tbd make nicer
+        std::cout << "mean runtime: " << arma::mean(runtimes) << "\n"; 
+        write_runtime_bmks(gaussian_bmk, "./bench/data/GaussianId_GLM_runtime_bmk.csv");
     }
 }
