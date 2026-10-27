@@ -166,9 +166,9 @@ int main () {
         write_accu_bmks(gaussian_bmk, "./bench/data/Gaussian_GLM_accu_bmk.csv");
     }
 
-    // runtime benchmarks (fewer)
+    // runtime benchmarks (maybe fewer because of no parallelization (competition for resources by threads))
     {
-        size_t N_iter_rt = 10;
+        size_t N_iter_rt = N_iter;
         std::vector<ModelBenchmarks> gaussian_bmk(N_iter_rt);
         arma::vec runtimes(N_iter_rt);
         for(size_t i = 0; i < N_iter_rt; i++) {
