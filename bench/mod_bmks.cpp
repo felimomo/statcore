@@ -90,9 +90,12 @@ ModelBenchmarks benchmark_model(
 }
 
 void write_accu_bmks(const std::vector<ModelBenchmarks>& bmk_vec, const path& out_path) {
+    bool is_new = !std::filesystem::exists(out_path) || std::filesystem::file_size(out_path) == 0;
     std::ofstream out_file;
-    out_file.open(out_path);
-    out_file << "dim,N,max_err,mean_err,median_err,err_std,frac_wrong\n";
+    out_file.open(out_path, std::ios::app);
+    if(is_new){
+        out_file << "dim,N,max_err,mean_err,median_err,err_std,frac_wrong\n";
+    }
     for(int i = 0; const auto& bmk: bmk_vec){
         out_file << bmk.error_metrics.N_ << ","
                  << bmk.error_metrics.dim_ << ","
@@ -106,9 +109,12 @@ void write_accu_bmks(const std::vector<ModelBenchmarks>& bmk_vec, const path& ou
 }
 
 void write_runtime_bmks(const std::vector<ModelBenchmarks>& bmk_vec, const path& out_path) {
+    bool is_new = !std::filesystem::exists(out_path) || std::filesystem::file_size(out_path) == 0;
     std::ofstream out_file;
-    out_file.open(out_path);
-    out_file << "dim,N,runtime,max_err,mean_err,median_err,err_std,frac_wrong\n";
+    out_file.open(out_path, std::ios::app);
+    if(is_new){
+        out_file << "dim,N,runtime,max_err,mean_err,median_err,err_std,frac_wrong\n";     
+    }
     for(int i = 0; const auto& bmk: bmk_vec){
         out_file << bmk.error_metrics.N_ << ","
                  << bmk.error_metrics.dim_ << ","
@@ -146,38 +152,46 @@ ModelBenchmarks bmk_subroutine(size_t dim, size_t N, std::mt19937& rng) {
 
 
 int main () {
+    // globals
     size_t N_iter = 25;
-
-    size_t dim = 20;
-    size_t N = dim * 10000; // tbd: loop over dimensions
-
-    // Gaussian
-    
     size_t base_seed = 42;
-    // accuracy benchmarks
-    {
-        std::vector<ModelBenchmarks> gaussian_bmk(N_iter);
-        #pragma omp parallel for
-        for(size_t i = 0; i < N_iter; i++) {
-            // 0. thread-safe random generator
-            std::mt19937 rng(base_seed + i);
-            gaussian_bmk[i] = bmk_subroutine(dim, N, rng);
-        }
-        write_accu_bmks(gaussian_bmk, "./bench/data/Gaussian_GLM_accu_bmk.csv");
-    }
 
-    // runtime benchmarks (maybe fewer because of no parallelization (competition for resources by threads))
-    {
-        size_t N_iter_rt = N_iter;
-        std::vector<ModelBenchmarks> gaussian_bmk(N_iter_rt);
-        arma::vec runtimes(N_iter_rt);
-        for(size_t i = 0; i < N_iter_rt; i++) {
-            // 0. thread-safe random generator
-            std::mt19937 rng(base_seed + i);
-            gaussian_bmk[i] = bmk_subroutine(dim, N, rng);
-            runtimes[i] = gaussian_bmk[i].runtime;
+    // benchmarks definitions
+    std::vector<size_t> dims {10, 25, 50, 100, 150};
+    std::vector<size_t> dim_to_N {10, 100, 1000, 10000};
+
+    // benchmarks loop
+    for(size_t i = 0; auto dim: dims){
+        for(size_t j = 0; auto dtn: dim_to_N){
+            arma::uword N = dim * dtn;
+            j++;
+            // Gaussian
+            // accuracy benchmarks
+            std::cout << "Working on dim = " << dim << ", N = " << N << "\n";
+            {
+                std::vector<ModelBenchmarks> gaussian_bmk(N_iter);
+                #pragma omp parallel for
+                for(size_t i = 0; i < N_iter; i++) {
+                    // 0. thread-safe random generator
+                    std::mt19937 rng(base_seed + i);
+                    gaussian_bmk[i] = bmk_subroutine(dim, N, rng);
+                }
+                write_accu_bmks(gaussian_bmk, "./bench/data/Gaussian_GLM_accu_bmk.csv");
+            }
+            // runtime benchmarks (maybe fewer because of no parallelization (competition for resources by threads))
+            {
+                size_t N_iter_rt = 10;
+                std::vector<ModelBenchmarks> gaussian_bmk(N_iter_rt);
+                arma::vec runtimes(N_iter_rt);
+                for(size_t i = 0; i < N_iter_rt; i++) {
+                    // 0. thread-safe random generator
+                    std::mt19937 rng(base_seed + i);
+                    gaussian_bmk[i] = bmk_subroutine(dim, N, rng);
+                    runtimes[i] = gaussian_bmk[i].runtime;
+                }
+                write_runtime_bmks(gaussian_bmk, "./bench/data/Gaussian_GLM_runtime_bmk.csv");
+            }
         }
-        std::cout << "mean runtime: " << arma::mean(runtimes) << "\n"; 
-        write_runtime_bmks(gaussian_bmk, "./bench/data/Gaussian_GLM_runtime_bmk.csv");
+        i++;
     }
 }
