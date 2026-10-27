@@ -73,7 +73,7 @@ ModelBenchmarks benchmark_model(
     mod.ingest_data(X,y);
     //
     steady_clock::time_point start = steady_clock::now();
-    arma::vec infer_params = mod.fit_loop({}); // {} uses default FitOptions variables.
+    arma::vec infer_params = mod.fit_loop({.beta_thresh = 1e-3}); // {} converts to FitOptions.
     // double runtime = ((steady_clock::now() - start).count(); // unnamed defaults to ns. 
     //                                                             fix is assign it first (conversion automatic):
     std::chrono::duration<double> elapsed = steady_clock::now() - start; 
