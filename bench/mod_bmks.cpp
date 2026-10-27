@@ -94,7 +94,7 @@ void write_accu_bmks(const std::vector<ModelBenchmarks>& bmk_vec, const path& ou
     std::ofstream out_file;
     out_file.open(out_path, std::ios::app);
     if(is_new){
-        out_file << "dim,N,max_err,mean_err,median_err,err_std,frac_wrong\n";
+        out_file << "N,dim,max_err,mean_err,median_err,err_std,frac_wrong\n";
     }
     for(int i = 0; const auto& bmk: bmk_vec){
         out_file << bmk.error_metrics.N_ << ","
@@ -113,7 +113,7 @@ void write_runtime_bmks(const std::vector<ModelBenchmarks>& bmk_vec, const path&
     std::ofstream out_file;
     out_file.open(out_path, std::ios::app);
     if(is_new){
-        out_file << "dim,N,runtime,max_err,mean_err,median_err,err_std,frac_wrong\n";     
+        out_file << "N,dim,runtime,max_err,mean_err,median_err,err_std,frac_wrong\n";     
     }
     for(int i = 0; const auto& bmk: bmk_vec){
         out_file << bmk.error_metrics.N_ << ","
