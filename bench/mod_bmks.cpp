@@ -180,6 +180,26 @@ ModelBenchmarks binom_bmk_subroutine(size_t dim, size_t N, std::mt19937& rng) {
     return benchmark_model(mod, X, y, targ_params);
 }
 
+ModelBenchmarks pois_bmk_subroutine(size_t dim, size_t N, std::mt19937& rng) {
+    // 1. sample 
+    // 1.1 model params
+    arma::vec beta = gen_targets(dim, rng);
+    double beta0 = 0.0;
+    arma::vec targ_params = arma::join_cols(beta, arma::vec{beta0});
+    // 1.2 data
+    // arma::mat X = arma::randn<arma::mat>(N, dim); // use thread-safe rng:
+    arma::mat X(N, dim);
+    std::normal_distribution<double> nd{0.0, 1.0};
+    std::generate(X.begin(), X.end(), [&] { return nd(rng); });
+    arma::vec y = gen_y_pois(X, beta, beta0, rng);
+    
+    // 2. initialize model
+    Models::PoissonLog mod(dim);
+    
+    // 3. benchmark fit
+    return benchmark_model(mod, X, y, targ_params);
+}
+
 int main () {
     // globals
     size_t N_iter = 25;
@@ -197,30 +217,30 @@ int main () {
 
             // Gaussian
             // accuracy benchmarks
-            // std::cout << "Working on dim = " << dim << ", N = " << N << "\n";
-            // {
-            //     std::vector<ModelBenchmarks> gaussian_bmk(N_iter);
-            //     #pragma omp parallel for
-            //     for(size_t i = 0; i < N_iter; i++) {
-            //         // 0. thread-safe random generator
-            //         std::mt19937 rng(base_seed + i);
-            //         gaussian_bmk[i] = gauss_bmk_subroutine(dim, N, rng);
-            //     }
-            //     write_accu_bmks(gaussian_bmk, "./bench/data/Gaussian_GLM_accu_bmk.csv");
-            // }
-            // // runtime benchmarks (maybe fewer because of no parallelization (competition for resources by threads))
-            // {
-            //     size_t N_iter_rt = 10;
-            //     std::vector<ModelBenchmarks> gaussian_bmk(N_iter_rt);
-            //     arma::vec runtimes(N_iter_rt);
-            //     for(size_t i = 0; i < N_iter_rt; i++) {
-            //         // 0. thread-safe random generator
-            //         std::mt19937 rng(base_seed + i);
-            //         gaussian_bmk[i] = gauss_bmk_subroutine(dim, N, rng);
-            //         runtimes[i] = gaussian_bmk[i].runtime;
-            //     }
-            //     write_runtime_bmks(gaussian_bmk, "./bench/data/Gaussian_GLM_runtime_bmk.csv");
-            // }
+            std::cout << "Working on dim = " << dim << ", N = " << N << "\n";
+            {
+                std::vector<ModelBenchmarks> gaussian_bmk(N_iter);
+                #pragma omp parallel for
+                for(size_t i = 0; i < N_iter; i++) {
+                    // 0. thread-safe random generator
+                    std::mt19937 rng(base_seed + i);
+                    gaussian_bmk[i] = gauss_bmk_subroutine(dim, N, rng);
+                }
+                write_accu_bmks(gaussian_bmk, "./bench/data/Gaussian_GLM_accu_bmk.csv");
+            }
+            // runtime benchmarks (maybe fewer because of no parallelization (competition for resources by threads))
+            {
+                size_t N_iter_rt = 10;
+                std::vector<ModelBenchmarks> gaussian_bmk(N_iter_rt);
+                arma::vec runtimes(N_iter_rt);
+                for(size_t i = 0; i < N_iter_rt; i++) {
+                    // 0. thread-safe random generator
+                    std::mt19937 rng(base_seed + i);
+                    gaussian_bmk[i] = gauss_bmk_subroutine(dim, N, rng);
+                    runtimes[i] = gaussian_bmk[i].runtime;
+                }
+                write_runtime_bmks(gaussian_bmk, "./bench/data/Gaussian_GLM_runtime_bmk.csv");
+            }
 
             // Binomial
             // accuracy benchmarks
@@ -247,6 +267,33 @@ int main () {
                     runtimes[i] = binom_bmk[i].runtime;
                 }
                 write_runtime_bmks(binom_bmk, "./bench/data/BinomLogit_GLM_runtime_bmk.csv");
+            }
+
+            // Poisson
+            // accuracy benchmarks
+            std::cout << "Working on dim = " << dim << ", N = " << N << "\n";
+            {
+                std::vector<ModelBenchmarks> pois_bmk(N_iter);
+                #pragma omp parallel for
+                for(size_t i = 0; i < N_iter; i++) {
+                    // 0. thread-safe random generator
+                    std::mt19937 rng(base_seed + i);
+                    pois_bmk[i] = pois_bmk_subroutine(dim, N, rng);
+                }
+                write_accu_bmks(pois_bmk, "./bench/data/PoissonLog_GLM_accu_bmk.csv");
+            }
+            // runtime benchmarks (maybe fewer because of no parallelization (competition for resources by threads))
+            {
+                size_t N_iter_rt = 10;
+                std::vector<ModelBenchmarks> pois_bmk(N_iter_rt);
+                arma::vec runtimes(N_iter_rt);
+                for(size_t i = 0; i < N_iter_rt; i++) {
+                    // 0. thread-safe random generator
+                    std::mt19937 rng(base_seed + i);
+                    pois_bmk[i] = pois_bmk_subroutine(dim, N, rng);
+                    runtimes[i] = pois_bmk[i].runtime;
+                }
+                write_runtime_bmks(pois_bmk, "./bench/data/PoissonLog_GLM_runtime_bmk.csv");
             }
         }
         i++;
