@@ -83,6 +83,10 @@ target_link_libraries(model_tests PRIVATE statcore)
 target_link_libraries(model_tests PRIVATE models)
 target_compile_options(model_tests PRIVATE -O3 -Wall -Wextra -Wpedantic)
 
+add_executable(mod_bmks bench/mod_bmks.cpp)
+target_link_libraries(mod_bmks PRIVATE statcore models logger)
+target_compile_options(model_tests PRIVATE -O3 -Wall -Wextra -Wpedantic)
+
 # add_library(statcore STATIC src/main.cpp)
 
 # set(CMAKE_CXX_STANDARD 20)
