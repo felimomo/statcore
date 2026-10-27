@@ -25,15 +25,25 @@ namespace Logging {
     {
         dim_ = infer_params.size() - 1;
         arma::vec err = arma::abs(infer_params - targ_params);
-        max_err = err.max();
-        mean_err = arma::mean(err);
-        median_err = arma::median(err);
-        err_std = arma::stddev(err);
+        has_nan_ = false;
+        if (err.has_nan()) {
+            has_nan_ = true;
+            max_err = 0.0;
+            mean_err = 0.0;
+            median_err = 0.0;
+            err_std = 0.0;
+            frac_wrong = 0.0;
+        } else {
+            max_err = err.max();
+            mean_err = arma::mean(err);
+            median_err = arma::median(err);
+            err_std = arma::stddev(err);
 
-        double prec = 1e-6; // magic number for stable relative errors
-        arma::vec healthy_rel_errs = err % (1 / (arma::abs(infer_params) + prec));
-        arma::uword N_wrong = arma::accu(arma::abs(healthy_rel_errs) > multipl_thresh);
-        frac_wrong = static_cast<double>(N_wrong) / N_; 
+            double prec = 1e-6; // magic number for stable relative errors
+            arma::vec healthy_rel_errs = err % (1 / (arma::abs(infer_params) + prec));
+            arma::uword N_wrong = arma::accu(arma::abs(healthy_rel_errs) > multipl_thresh);
+            frac_wrong = static_cast<double>(N_wrong) / N_; 
+        }
     }
     void ErrorMetrics::print_summary(const std::filesystem::path& file) {
         std::ofstream file_stream;

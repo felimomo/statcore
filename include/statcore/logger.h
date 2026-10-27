@@ -17,6 +17,7 @@ namespace Logging{
         // meta
         std::size_t N_=0;
         std::size_t dim_=0;
+        bool has_nan_ = false;
         // data
         double max_err = 0.0;
         double mean_err = 0.0;

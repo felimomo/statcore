@@ -97,15 +97,26 @@ void write_accu_bmks(const std::vector<ModelBenchmarks>& bmk_vec, const path& ou
         out_file << "N,dim,max_err,mean_err,median_err,err_std,frac_wrong\n";
     }
     for(int i = 0; const auto& bmk: bmk_vec){
-        out_file << bmk.error_metrics.N_ << ","
-                 << bmk.error_metrics.dim_ << ","
-                 << bmk.error_metrics.max_err << ","
-                 << bmk.error_metrics.mean_err << ","
-                 << bmk.error_metrics.median_err << ","
-                 << bmk.error_metrics.err_std << ","
-                 << bmk.error_metrics.frac_wrong << "\n";
+        if (!bmk.error_metrics.has_nan_) {
+            out_file << bmk.error_metrics.N_ << ","
+                    << bmk.error_metrics.dim_ << ","
+                    << bmk.error_metrics.max_err << ","
+                    << bmk.error_metrics.mean_err << ","
+                    << bmk.error_metrics.median_err << ","
+                    << bmk.error_metrics.err_std << ","
+                    << bmk.error_metrics.frac_wrong << "\n";
+        } else {
+            // encode nan as blank spaces
+            out_file << bmk.error_metrics.N_ << ","
+                        << bmk.error_metrics.dim_ << ","
+                        << ","
+                        << ","
+                        << ","
+                        << ","
+                        << "\n";
+        }
         i++;
-    }
+    } // for i
 }
 
 void write_runtime_bmks(const std::vector<ModelBenchmarks>& bmk_vec, const path& out_path) {
@@ -128,7 +139,7 @@ void write_runtime_bmks(const std::vector<ModelBenchmarks>& bmk_vec, const path&
     }
 }
 
-ModelBenchmarks bmk_subroutine(size_t dim, size_t N, std::mt19937& rng) {
+ModelBenchmarks gauss_bmk_subroutine(size_t dim, size_t N, std::mt19937& rng) {
     // 1. sample 
     // 1.1 model params
     arma::vec beta = gen_targets(dim, rng);
@@ -149,7 +160,25 @@ ModelBenchmarks bmk_subroutine(size_t dim, size_t N, std::mt19937& rng) {
     return benchmark_model(mod, X, y, targ_params);
 }
 
-
+ModelBenchmarks binom_bmk_subroutine(size_t dim, size_t N, std::mt19937& rng) {
+    // 1. sample 
+    // 1.1 model params
+    arma::vec beta = gen_targets(dim, rng);
+    double beta0 = 0.0;
+    arma::vec targ_params = arma::join_cols(beta, arma::vec{beta0});
+    // 1.2 data
+    // arma::mat X = arma::randn<arma::mat>(N, dim); // use thread-safe rng:
+    arma::mat X(N, dim);
+    std::normal_distribution<double> nd{0.0, 1.0};
+    std::generate(X.begin(), X.end(), [&] { return nd(rng); });
+    arma::vec y = gen_y_binom(X, beta, beta0, rng);
+    
+    // 2. initialize model
+    Models::BinomLogit mod(dim);
+    
+    // 3. benchmark fit
+    return benchmark_model(mod, X, y, targ_params);
+}
 
 int main () {
     // globals
@@ -165,31 +194,59 @@ int main () {
         for(size_t j = 0; auto dtn: dim_to_N){
             arma::uword N = dim * dtn;
             j++;
+
             // Gaussian
+            // accuracy benchmarks
+            // std::cout << "Working on dim = " << dim << ", N = " << N << "\n";
+            // {
+            //     std::vector<ModelBenchmarks> gaussian_bmk(N_iter);
+            //     #pragma omp parallel for
+            //     for(size_t i = 0; i < N_iter; i++) {
+            //         // 0. thread-safe random generator
+            //         std::mt19937 rng(base_seed + i);
+            //         gaussian_bmk[i] = gauss_bmk_subroutine(dim, N, rng);
+            //     }
+            //     write_accu_bmks(gaussian_bmk, "./bench/data/Gaussian_GLM_accu_bmk.csv");
+            // }
+            // // runtime benchmarks (maybe fewer because of no parallelization (competition for resources by threads))
+            // {
+            //     size_t N_iter_rt = 10;
+            //     std::vector<ModelBenchmarks> gaussian_bmk(N_iter_rt);
+            //     arma::vec runtimes(N_iter_rt);
+            //     for(size_t i = 0; i < N_iter_rt; i++) {
+            //         // 0. thread-safe random generator
+            //         std::mt19937 rng(base_seed + i);
+            //         gaussian_bmk[i] = gauss_bmk_subroutine(dim, N, rng);
+            //         runtimes[i] = gaussian_bmk[i].runtime;
+            //     }
+            //     write_runtime_bmks(gaussian_bmk, "./bench/data/Gaussian_GLM_runtime_bmk.csv");
+            // }
+
+            // Binomial
             // accuracy benchmarks
             std::cout << "Working on dim = " << dim << ", N = " << N << "\n";
             {
-                std::vector<ModelBenchmarks> gaussian_bmk(N_iter);
+                std::vector<ModelBenchmarks> binom_bmk(N_iter);
                 #pragma omp parallel for
                 for(size_t i = 0; i < N_iter; i++) {
                     // 0. thread-safe random generator
                     std::mt19937 rng(base_seed + i);
-                    gaussian_bmk[i] = bmk_subroutine(dim, N, rng);
+                    binom_bmk[i] = binom_bmk_subroutine(dim, N, rng);
                 }
-                write_accu_bmks(gaussian_bmk, "./bench/data/Gaussian_GLM_accu_bmk.csv");
+                write_accu_bmks(binom_bmk, "./bench/data/BinomLogit_GLM_accu_bmk.csv");
             }
             // runtime benchmarks (maybe fewer because of no parallelization (competition for resources by threads))
             {
                 size_t N_iter_rt = 10;
-                std::vector<ModelBenchmarks> gaussian_bmk(N_iter_rt);
+                std::vector<ModelBenchmarks> binom_bmk(N_iter_rt);
                 arma::vec runtimes(N_iter_rt);
                 for(size_t i = 0; i < N_iter_rt; i++) {
                     // 0. thread-safe random generator
                     std::mt19937 rng(base_seed + i);
-                    gaussian_bmk[i] = bmk_subroutine(dim, N, rng);
-                    runtimes[i] = gaussian_bmk[i].runtime;
+                    binom_bmk[i] = binom_bmk_subroutine(dim, N, rng);
+                    runtimes[i] = binom_bmk[i].runtime;
                 }
-                write_runtime_bmks(gaussian_bmk, "./bench/data/Gaussian_GLM_runtime_bmk.csv");
+                write_runtime_bmks(binom_bmk, "./bench/data/BinomLogit_GLM_runtime_bmk.csv");
             }
         }
         i++;
